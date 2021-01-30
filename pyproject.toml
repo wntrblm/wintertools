@@ -8,4 +8,8 @@ author = "Alethea Katherine Flowers"
 author-email = "thea@winterbloom.com"
 home-page = "https://github.com/theacodes/wintertools"
 classifiers = ["License :: OSI Approved :: MIT License"]
-
+requires = [
+    "requests >= 2.25.0",
+    "pyserial >= 3.5",
+    "pyvisa >= 1.11.0"
+]
