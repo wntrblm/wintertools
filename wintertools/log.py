@@ -27,6 +27,13 @@ _log_file = _log_file_path.open("w")
 def _finish_up():
     _log_file.flush()
     _log_file.close()
+    print(
+        tui.rgb(SUCCESS_COLOR),
+        tui.bold,
+        f"► full log at {_log_file_path}",
+        tui.reset,
+        sep="",
+    )
 
 
 atexit.register(_finish_up)
@@ -79,4 +86,4 @@ def section(name, depth=1, **kwargs):
     output = f"{tui.bold}{tui.underline}{marker} {name}\n"
     _print_term((0.5, 0.8, 1.0), output)
     marker = "#" * depth
-    _print_file(f"\n{depth} {name}\n")
+    _print_file(f"\n{marker} {name}\n")
