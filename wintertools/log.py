@@ -10,7 +10,7 @@ from pathlib import Path
 import sys
 import traceback
 
-from libwinter import tui
+from wintertools import tui
 
 DEBUG_COLOR = (0.7, 0.7, 0.7)
 INFO_COLOR = (0.8, 0.8, 1.0)
