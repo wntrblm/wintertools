@@ -73,7 +73,7 @@ class Colors:
 
 
 class Updateable:
-    def __init__(self, clear_all=False):
+    def __init__(self, clear_all=True):
         self._buf = io.StringIO()
         self._line_count = 0
         self._clear_all = clear_all
@@ -90,56 +90,26 @@ class Updateable:
             if self._clear_all:
                 clear_lines += Escape.ERASE_AFTER_CURSOR
             clear_lines += "\r"
-            sys.stdout.write(clear_lines)
+            sys.__stdout__.write(clear_lines)
             self._line_count = 0
 
         output = self._buf.getvalue()
-        sys.stdout.write(output)
-        sys.stdout.flush()
+        sys.__stdout__.write(output)
+        sys.__stdout__.flush()
         self._buf.truncate(0)
         self._line_count = output.count("\n")
 
-    def __enter__(self):
+    def __enter__(self, stdout=True):
         sys.stdout.write(Escape.HIDE_CURSOR)
+        if stdout:
+            sys.stdout = self._buf
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         sys.stdout.write(Escape.SHOW_CURSOR)
+        sys.stdout = sys.__stdout__
 
     def flush(self):
-        sys.stdout.flush()
-
-
-class UnbufferedUpdateable:
-    def __init__(self):
-        self._line_count = 0
-        self._clear_on_next = False
-
-    def write(self, text):
-        if self._clear_on_next:
-            self.clear()
-            self._clear_on_next = False
-        self._line_count += text.count("\n")
-        sys.stdout.write(text)
-
-    def reset(self):
-        self._line_count = 0
-
-    def clear(self):
-        if self._line_count > 0:
-            clear_lines = Escape.CURSOR_PREVIOUS_LINE_NUM.format(count=self._line_count)
-            clear_lines += Escape.ERASE_AFTER_CURSOR
-            sys.stdout.write(clear_lines)
-            sys.stdout.flush()
-            self._line_count = 0
-
-    def __enter__(self):
-        self._clear_on_next = True
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.flush()
-
-    def flush(self):
-        sys.stdout.flush()
+        sys.__stdout__.flush()
 
 
 class Segment:
@@ -157,7 +127,10 @@ class Bar:
         self.width = width
         self.fill = fill
 
-    def draw(self, output, *segments, end="\n"):
+    def draw(self, *segments, end="\n", file=None):
+        if file is None:
+            file = sys.stdout
+
         segments = list(segments)
 
         for n, segment in enumerate(segments):
@@ -186,30 +159,33 @@ class Bar:
             buf += Colors.rgb(*seg.color) + (seg.char * seg_lengths[n])
         buf += Colors.reset + end
 
-        output.write(buf)
+        file.write(buf)
 
 
 class Columns:
     def __init__(self, *columns):
         self._columns = columns
 
-    def draw(self, output, *values):
+    def draw(self, *values, file=None):
+        if file is None:
+            file = sys.stdout
+
         n = 0
         for v in values:
             if isinstance(v, str) and v.startswith(Escape.CSI):
-                output.write(v)
+                file.write(v)
                 continue
             if isinstance(v, tuple) and len(v) == 3:
-                output.write(Colors.rgb(v))
+                file.write(Colors.rgb(v))
                 continue
 
             c = self._columns[n]
             formatter = f"{{: {c}}}"
-            output.write(formatter.format(str(v)))
+            file.write(formatter.format(str(v)))
 
             n += 1
 
-        output.write(Colors.reset + "\n")
+        file.write(Colors.reset + "\n")
 
     def __len__(self):
         return sum(int(s[1:]) for s in self._columns)
@@ -222,7 +198,7 @@ def width():
 
 def reset_terminal():
     print(Escape.RESET + Escape.SHOW_CURSOR, end="")
-    sys.stdout.flush()
+    sys.__stdout__.flush()
 
 
 atexit.register(reset_terminal)
