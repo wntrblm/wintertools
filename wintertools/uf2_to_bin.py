@@ -36,10 +36,10 @@ def with_buf(buf):
     for blockno in range(numblocks):
         ptr = blockno * 512
         block = buf[ptr : ptr + 512]
-        header = struct.unpack(b"<IIIIIIII", block[0:32])
+        header = struct.unpack("<IIIIIIII", block[0:32])
 
         if header[0] != UF2_MAGIC_START0 or header[1] != UF2_MAGIC_START1:
-            print("Skipping block at " + ptr + "; bad magic")
+            print(f"Skipping block at {ptr}; bad magic")
             continue
 
         if header[2] & 1:
@@ -48,7 +48,7 @@ def with_buf(buf):
 
         datalen = header[4]
 
-        assert datalen <= 476, "Invalid UF2 data size at " + ptr
+        assert datalen <= 476, f"Invalid UF2 data size at {ptr}"
 
         newaddr = header[3]
         if curraddr is None:
@@ -56,9 +56,9 @@ def with_buf(buf):
 
         padding = newaddr - curraddr
 
-        assert padding >= 0, "Block out of order at " + ptr
-        assert padding < 10 * 1024 * 1024, "More than 10M of padding needed at " + ptr
-        assert padding % 4 == 0, "Non-word padding size at " + ptr
+        assert padding >= 0, f"Block out of order at {ptr}"
+        assert padding < 10 * 1024 * 1024, f"More than 10M of padding needed at {ptr}""
+        assert padding % 4 == 0, f"Non-word padding size at {ptr}""
 
         while padding > 0:
             padding -= 4
