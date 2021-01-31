@@ -10,10 +10,9 @@ import dataclasses
 import json
 import pathlib
 import subprocess
-import sys
 import typing
 
-from libwinter import tui
+from wintertools import tui
 
 COLUMNS = tui.Columns("<15", ">8", "^5", ">8", ">7")
 COLUMNS_ALT = tui.Columns("<15", ">8", "<13", ">7")
@@ -69,7 +68,6 @@ def _print_memory_sections(name, size, *sections):
     color = _color_for_percent(used_percent)
 
     COLUMNS.draw(
-        sys.stdout,
         f"{name} used:",
         color,
         f"{used:,}",
@@ -81,7 +79,6 @@ def _print_memory_sections(name, size, *sections):
     )
 
     BAR.draw(
-        sys.stdout,
         tui.Segment(used_fixed / size, FIXED_SEG_COLOR),
         tui.Segment((used - used_fixed) / size, _color_for_percent(used_percent)),
     )
@@ -106,7 +103,6 @@ def _print_memory_sections(name, size, *sections):
             last_size_sec = ("",)
 
         COLUMNS_ALT.draw(
-            sys.stdout,
             color,
             f"{sec.name}: ",
             f"{sec.size:,}",
