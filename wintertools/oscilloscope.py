@@ -75,5 +75,15 @@ class Oscilloscope:
         except ValueError:
             return 0
 
+    def get_max(self, trace: str):
+        self.port.write(f"{trace}:parameter_value? MAX")
+        try:
+            return float(self.port.read_raw().decode("utf-8").split(",")[-1])
+        except ValueError:
+            return 0
+
     def set_trigger_level(self, trig_source: str, trig_level: float):
         self.port.write(f"{trig_source}:trig_level {trig_level}V")
+
+    def show_measurement(self, trace: str, parameter: str):
+        self.port.write(f"parameter_custom {trace},{parameter}")
