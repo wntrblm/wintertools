@@ -42,16 +42,19 @@ class Oscilloscope:
     def enable_bandwidth_limit(self):
         self.port.write("BWL C1,ON,C2,ON,C3,ON,C4,ON")
 
+    def set_intensity(self, grid: str, trace: str):
+        self.port.write(f"intensity GRID,{grid},TRACE,{trace}")
+
     def enable_channel(self, channel: str):
         self.port.write(f"{channel}:trace on")
 
     def disable_channel(self, channel: str):
         self.port.write(f"{channel}:trace off")
 
-    def set_vertical_division(self, channel: str, volts: float):
+    def set_vertical_division(self, channel: str, volts: str):
         self.port.write(f"{channel}:vdiv {volts}")
 
-    def set_vertical_offset(self, channel: str, volts: float):
+    def set_vertical_offset(self, channel: str, volts: str):
         self.port.write(f"{channel}:ofst {volts}")
 
     def set_time_division(self, value: str):
@@ -60,8 +63,11 @@ class Oscilloscope:
     def enable_cursors(self):
         self.port.write("cursor_measure manual")
 
+    def set_cursor_type(self, type: str):
+        self.port.write(f"cursor_type {type}")
+
     def set_vertical_cursor(self, trace: str, ref: float, dif: float):
-        self.port.write(f"{trace}:cursor_set VREF,{ref}V,VDIF,{dif}V")
+        self.port.write(f"{trace}:cursor_set VREF,{ref},VDIF,{dif}")
 
     def get_frequency(self):
         self.port.write("cymometer?")
