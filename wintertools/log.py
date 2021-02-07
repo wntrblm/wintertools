@@ -6,9 +6,9 @@
 
 import atexit
 import datetime
-from pathlib import Path
 import sys
 import traceback
+from pathlib import Path
 
 from wintertools import tui
 
@@ -65,11 +65,11 @@ def warning(*args, **kwargs):
 
 def error(text, *args, exc=None, quit=True, **kwargs):
     if exc is not None:
-        _print_term(ERROR_COLOR, f"{text}: {exc}", *args, **kwargs)
+        _print_term(ERROR_COLOR, f"{text}: {exc}", *args, file=sys.__stdout__, **kwargs)
         _print_file(f"[error]   : {text}: {exc}", *args, **kwargs)
         traceback.print_exc(file=_log_file)
     else:
-        _print_term(ERROR_COLOR, text, *args, **kwargs)
+        _print_term(ERROR_COLOR, text, *args, file=sys.__stdout__, **kwargs)
         _print_file(f"[error]   : {text}", *args, **kwargs)
 
     if quit:
