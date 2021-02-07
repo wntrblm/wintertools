@@ -72,6 +72,9 @@ class Colors:
         return Escape.COLOR24.format(r=r, g=g, b=b)
 
 
+_stdout_stack = []
+
+
 class Updateable:
     def __init__(self, clear_all=True):
         self._buf = io.StringIO()
@@ -102,11 +105,13 @@ class Updateable:
     def __enter__(self, stdout=True):
         sys.stdout.write(Escape.HIDE_CURSOR)
         if stdout:
+            _stdout_stack.append(sys.stdout)
             sys.stdout = self._buf
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         sys.stdout.write(Escape.SHOW_CURSOR)
-        sys.stdout = sys.__stdout__
+        if sys.stdout == self._buf:
+            sys.stdout = _stdout_stack.pop()
 
     def flush(self):
         sys.__stdout__.flush()
