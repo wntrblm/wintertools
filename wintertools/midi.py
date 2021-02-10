@@ -6,6 +6,8 @@
 Utilities for interacting with Winterbloom MIDI devices.
 """
 
+import time
+
 import rtmidi.midiutil
 
 from wintertools import teeth
@@ -14,23 +16,30 @@ SYSEX_START = 0xF0
 SYSEX_END = 0xF7
 
 
-def wait_for_message(port_in):
+def wait_for_message(port_in, timeout=1):
+    start = time.monotonic()
     while True:
         msg = port_in.get_message()
         if msg:
             msg, _ = msg
             return msg
 
+        if time.monotonic() > start + timeout:
+            return None
+
 
 class MIDIDevice:
     def __init__(self):
-        self.port_in, _ = rtmidi.midiutil.open_midiport(
-            self.MIDI_PORT_NAME, type_="input"
+        in_port_name = getattr(
+            self, "MIDI_PORT_IN_NAME", getattr(self, "MIDI_PORT_NAME", None)
         )
+        self.port_in, _ = rtmidi.midiutil.open_midiport(in_port_name, type_="input")
         self.port_in.ignore_types(sysex=False)
-        self.port_out, _ = rtmidi.midiutil.open_midiport(
-            self.MIDI_PORT_NAME, type_="output"
+
+        out_port_name = getattr(
+            self, "MIDI_PORT_OUT_NAME", getattr(self, "MIDI_PORT_NAME", None)
         )
+        self.port_out, _ = rtmidi.midiutil.open_midiport(out_port_name, type_="output")
 
     def wait_for_message(self):
         return wait_for_message(self.port_in)

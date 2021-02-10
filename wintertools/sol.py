@@ -12,7 +12,8 @@ from wintertools import midi, fs, log
 
 
 class Sol(midi.MIDIDevice):
-    MIDI_PORT_NAME = "Sol usb_midi.ports[0]"
+    MIDI_PORT_OUT_NAME = "Sol usb_midi.ports[0]"
+    MIDI_PORT_IN_NAME = "Sol usb_midi.ports[1]"
     SYSEX_MARKER = 0x78
 
     # TODO: Use the USB PID to unique identify the drive in case there are

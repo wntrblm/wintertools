@@ -14,7 +14,7 @@ SYSEX_MARKER = 0x78
 
 outputs = winterbloom_sol.sol.Outputs()
 midi_in = smolmidi.MidiIn(usb_midi.ports[0])
-
+midi_out = usb_midi.ports[1]
 
 while True:
     msg = midi_in.receive()
@@ -63,3 +63,5 @@ while True:
         outputs.cv_d = voltage
 
     print(voltage)
+
+    midi_out.write(bytearray([smolmidi.SYSEX, SYSEX_MARKER, 0x01, smolmidi.SYSEX_END]))
