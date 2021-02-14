@@ -20,10 +20,17 @@ class Sol(midi.MIDIDevice):
     # multiple CircuitPython devices connected.
     DRIVE_NAME = "CIRCUITPY"
 
+    _code_copied = False
+
     def __init__(self):
         super().__init__()
 
     def setup(self):
+        if not self._code_copied:
+            self.copy_script()
+            self._code_copied = True
+
+    def copy_script(self):
         log.info("Copying script to Sol")
         drive = fs.find_drive_by_name("CIRCUITPY")
 
