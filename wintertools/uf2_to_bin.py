@@ -57,8 +57,8 @@ def with_buf(buf):
         padding = newaddr - curraddr
 
         assert padding >= 0, f"Block out of order at {ptr}"
-        assert padding < 10 * 1024 * 1024, f"More than 10M of padding needed at {ptr}""
-        assert padding % 4 == 0, f"Non-word padding size at {ptr}""
+        assert padding < 10 * 1024 * 1024, f"More than 10M of padding needed at {ptr}"
+        assert padding % 4 == 0, f"Non-word padding size at {ptr}"
 
         while padding > 0:
             padding -= 4
