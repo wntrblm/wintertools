@@ -4,11 +4,12 @@
 
 """Control Sol to output high-resolution voltage references for calibration."""
 
+import filecmp
 import importlib.resources
 import struct
 import time
 
-from wintertools import midi, fs, log
+from wintertools import fs, log, midi
 
 
 class Sol(midi.MIDIDevice):
@@ -26,18 +27,23 @@ class Sol(midi.MIDIDevice):
         super().__init__()
 
     def setup(self):
-        if not self._code_copied:
+        if not Sol._code_copied:
             self.copy_script()
-            self._code_copied = True
+            Sol._code_copied = True
 
     def copy_script(self):
         log.info("Copying script to Sol")
         drive = fs.find_drive_by_name("CIRCUITPY")
+        dest = f"{drive}/main.py"
 
         with importlib.resources.path(
             "wintertools.data", "sol_circuitpython_code.py"
         ) as src:
-            fs.copyfile(src, f"{drive}/main.py")
+            if not filecmp.cmp(src, dest):
+                fs.copyfile(src, dest)
+            else:
+                print("Sol already has the script. :)")
+                return
 
         # Wait for sol to reboot
         log.info("Waiting for sol to reboot...")
