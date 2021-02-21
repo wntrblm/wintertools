@@ -20,6 +20,7 @@ class Oscilloscope:
 
     def __init__(self, resource_manager):
         self._connect(resource_manager)
+        self._time_div = None
 
     def _connect(self, resource_manager):
         try:
@@ -37,7 +38,8 @@ class Oscilloscope:
     def reset(self):
         self.port.write("*rst")
         # *opc? should block until the device is ready, but it doesn't, so just sleep.
-        time.sleep(5)
+        time.sleep(4)
+        self._time_div = None
 
     def enable_bandwidth_limit(self):
         self.port.write("BWL C1,ON,C2,ON,C3,ON,C4,ON")
@@ -58,7 +60,11 @@ class Oscilloscope:
         self.port.write(f"{channel}:ofst {volts}")
 
     def set_time_division(self, value: str):
-        self.port.write(f"tdiv {value}")
+        # Prevent unnecessarily changing the time division, since it can
+        # be slow.
+        if self._time_div != value:
+            self.port.write(f"tdiv {value}")
+            self._time_div = value
 
     def enable_cursors(self):
         self.port.write("cursor_measure manual")
