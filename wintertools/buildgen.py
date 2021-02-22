@@ -6,7 +6,6 @@
 Helpers for generating ninja builds
 """
 
-import dataclasses
 import pathlib
 import shutil
 import subprocess
@@ -441,7 +440,7 @@ def clang_format_build(writer, files: list):
 
 def clang_tidy_build(writer, srcs: list):
     writer.build(
-        f"tidy.phony",
+        "tidy.phony",
         "clang_tidy",
         variables=dict(
             srcs=strigify_paths(srcs),

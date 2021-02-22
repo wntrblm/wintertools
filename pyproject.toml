@@ -13,4 +13,6 @@ requires = [
     "pyserial >= 3.5",
     "pyvisa >= 1.11.0",
     "readchar >= 2.0.1",
+    "structy_generator",
+    "structy",
 ]
