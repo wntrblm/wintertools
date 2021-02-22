@@ -437,10 +437,14 @@ def clang_format_build(writer, files: list):
         writer.build(f"$builddir/format/{path}", "clang_format", str(path))
         writer.newline()
 
+    writer.build(
+        "format", "phony", implicit=[f"$builddir/format/{path}" for path in files]
+    )
+
 
 def clang_tidy_build(writer, srcs: list):
     writer.build(
-        "tidy.phony",
+        "tidy",
         "clang_tidy",
         variables=dict(
             srcs=strigify_paths(srcs),
