@@ -11,7 +11,7 @@ import time
 import rtmidi
 import rtmidi.midiutil
 
-from wintertools import teeth
+from wintertools import teeth, log
 
 SYSEX_START = 0xF0
 SYSEX_END = 0xF7
@@ -39,7 +39,8 @@ def open_midiport(port, *args, **kwargs):
                 port, *args, interactive=False, **kwargs
             )
         except (rtmidi.NoDevicesError, rtmidi.InvalidPortError):
-            input(f"Couldn't find MIDI device {port}. Press enter to retry. ")
+            log.warning(f"Couldn't find MIDI device {port}. Retrying in 1s...")
+            time.sleep(1)
             continue
 
 
