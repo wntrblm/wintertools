@@ -6,6 +6,7 @@
 Helpers for generating ninja builds
 """
 
+import os
 import pathlib
 import shutil
 import subprocess
@@ -52,7 +53,53 @@ def check_gcc_version(min_version="10.2.0"):
         sys.exit(1)
 
 
+def ensure_directory():
+    """
+    Makes sure that the current working directory is the directory that holds
+    the script that's being run.
+    """
+    os.chdir(pathlib.Path(sys.modules["__main__"].__file__).parent)
+
+
 # Common flags & defines for MCUs used by Winterbloom
+
+
+class Desktop:
+    """Used for tests"""
+
+    @classmethod
+    def common_flags(cls) -> list:
+        return [
+            "-funsigned-char -fshort-enums",
+            # Because of how Ninja runs gcc it doesn't know that it has an interactive
+            # terminal and disables color output. This makes sure it always outputs color.
+            "-fdiagnostics-color=always",
+        ]
+
+    @classmethod
+    def cc_flags(cls):
+        return [
+            # Error on all warnings and enable several useful warnings.
+            # -Wall turns on warning for questionable patterns that should be easy to fix.
+            # -Wextra adds a few more on top of -Wall that should also be easy to fix.
+            # -Wdouble-promotion warns when a value is automatially promoted to a double.
+            #   this is especially useful because any code that deals with doubles will
+            #   be large and slow and we definitely want to avoid that.
+            # -Wformat=2 checks calls to printf & friends to make sure the format specifiers
+            #   match the types of the arguments.
+            # -Wundef checks for undefined indentifiers in #if macros.
+            "-W -Wall -Wextra -Werror -Wformat=2 -Wundef",
+            # Other flags that might be useful:
+            # -Wconversion warn about implicit integer conversions
+        ]
+
+    @classmethod
+    def ld_flags(cls):
+        return []
+
+    @classmethod
+    def defines(cls) -> dict:
+        return {}
 
 
 class CortexM:
@@ -153,6 +200,11 @@ class SAMD21(CortexM):
 
 def strigify_paths(paths: list) -> list:
     return [str(path) for path in paths]
+
+
+def remove_relative_parts(path: pathlib.Path) -> pathlib.Path:
+    """Removes any leading ".." in a path."""
+    return pathlib.Path(*[part for part in path.parts if part != ".."])
 
 
 def expand_srcs(srcs: list) -> list:
@@ -319,7 +371,9 @@ def common_rules(writer):
 
 def object_build(writer, src: pathlib.Path) -> pathlib.Path:
     """Generates a build for turning source file into an object file."""
-    object_path = pathlib.Path("$builddir") / src.with_suffix(".o")
+    object_path = pathlib.Path("$builddir") / remove_relative_parts(
+        src.with_suffix(".o")
+    )
 
     writer.build(outputs=str(object_path), rule="cc", inputs=str(src))
 
@@ -332,9 +386,9 @@ def compile_build(writer, srcs: list) -> list:
     return [object_build(writer, src) for src in srcs]
 
 
-def link_build(writer, program: str, objects: list):
+def link_build(writer, program: str, objects: list, ext=".elf"):
     """Generates a build to link the given project with the given objects."""
-    writer.build(f"build/{program}.elf", "ld", strigify_paths(objects))
+    writer.build(f"build/{program}{ext}", "ld", strigify_paths(objects))
     writer.newline()
 
 
