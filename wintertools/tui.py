@@ -4,11 +4,11 @@
 
 """Utilities for Terminal UIs."""
 
-import sys
-import math
 import atexit
-import shutil
 import io
+import math
+import shutil
+import sys
 
 
 class Escape:
@@ -22,7 +22,8 @@ class Escape:
     SHOW_CURSOR = f"{CSI}?25h"
 
     RESET = f"{CSI}0m"
-    COLOR24 = f"{CSI}38;2;{{r}};{{g}};{{b}}m"
+    COLOR24FG = f"{CSI}38;2;{{r}};{{g}};{{b}}m"
+    COLOR24BG = f"{CSI}48;2;{{r}};{{g}};{{b}}m"
     BOLD = f"{CSI}1m"
     FAINT = f"{CSI}2m"
     ITALIC = f"{CSI}3m"
@@ -66,10 +67,14 @@ class Colors:
     reset = Escape.RESET
 
     @staticmethod
-    def rgb(r, g=None, b=None):
+    def rgb(r, g=None, b=None, fg=True):
         r, g, b = _normalize_color(r, g, b)
         r, g, b = [int(x * 255) for x in (r, g, b)]
-        return Escape.COLOR24.format(r=r, g=g, b=b)
+
+        if fg:
+            return Escape.COLOR24FG.format(r=r, g=g, b=b)
+        else:
+            return Escape.COLOR24BG.format(r=r, g=g, b=b)
 
 
 _stdout_stack = []
@@ -110,6 +115,12 @@ class Updateable:
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         sys.stdout.write(Escape.SHOW_CURSOR)
+
+        output = self._buf.getvalue()
+        sys.__stdout__.write(output)
+        sys.__stdout__.flush()
+        self._buf.truncate(0)
+
         if sys.stdout == self._buf:
             sys.stdout = _stdout_stack.pop()
 
