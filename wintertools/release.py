@@ -39,9 +39,10 @@ def _import_config(root):
     return module
 
 
-def run(*args):
+def run(*args, capture=True):
+    print("$ " + " ".join(args))
     return subprocess.run(
-        args, capture_output=True, encoding="utf-8", check=True
+        args, capture_output=capture, encoding="utf-8", check=True
     ).stdout
 
 
@@ -129,7 +130,7 @@ def _git_info() -> dict:
 
 
 def _git_tag(tag_name):
-    run("git", "tag", tag_name)
+    run("git", "tag", tag_name, capture=False)
     run("git", "push", "origin", tag_name)
 
 
@@ -189,6 +190,8 @@ def add_artifact(src, name, **details):
 
 def main():
     git_info = _git_info()
+
+    print(f"Working from {git_info['root']}")
     os.chdir(git_info["root"])
 
     print(f"Tagging {git_info['tag']}...")
