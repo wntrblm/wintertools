@@ -12,11 +12,12 @@ import mimetypes
 import os
 import os.path
 import shutil
-import subprocess
 import tempfile
 import webbrowser
 
 import requests
+
+from wintertools import git
 
 GITHUB_API_TOKEN = os.environ["GITHUB_API_KEY"]
 
@@ -39,30 +40,6 @@ def _import_config(root):
     return module
 
 
-def run(*args, capture=True):
-    print("$ " + " ".join(args))
-    return subprocess.run(
-        args, capture_output=capture, encoding="utf-8", check=True
-    ).stdout
-
-
-def _edit_content(editor, content):
-    handle, filename = tempfile.mkstemp(".md")
-    os.close(handle)
-
-    with open(filename, "w") as fh:
-        fh.write(content)
-
-    try:
-        run(*(editor + [filename]))
-
-        with open(filename, "r") as fh:
-            return fh.read()
-
-    finally:
-        os.remove(filename)
-
-
 def _day_ordinal(day):
     if 4 <= day <= 20 or 24 <= day <= 30:
         return "th"
@@ -73,38 +50,15 @@ def _day_ordinal(day):
 def _git_info() -> dict:
     info = {}
 
-    # Editor
-    editor = run("git", "config", "--get", "core.editor").strip().split(" ")
-    info["editor"] = editor
-
-    # Root directory
-
-    root = run("git", "rev-parse", "--show-toplevel").strip()
-
-    info["root"] = root
-
-    # Repo name
-
-    origin = run("git", "config", "--get", "remote.origin.url")
-
-    info["repo"] = origin.split(":")[1].rsplit(".")[0]
-
-    # Last release
-
-    run("git", "fetch", "--tags")
-    tag_list = run("git", "tag", "--list", "--sort=-creatordate").split("\n")
-
-    info["last_release"] = tag_list[0]
+    info["root"] = git.root()
+    info["repo"] = git.repo_name()
+    git.fetch_tags()
+    info["last_release"] = git.latest_tag()
 
     # List of commits/changes since last version
-
-    changes = run("git", "log", "--format=%s", f"{info['last_release']}..HEAD").split(
-        "\n"
-    )
-    changes = list(filter(None, changes))
+    changes = git.get_change_summary(info["last_release"], "HEAD")
 
     # Arrange changes by category
-
     categorized_changes = collections.defaultdict(list)
 
     for change in changes:
@@ -127,11 +81,6 @@ def _git_info() -> dict:
     )
 
     return info
-
-
-def _git_tag(tag_name):
-    run("git", "tag", tag_name, capture=False)
-    run("git", "push", "origin", tag_name)
 
 
 def _github_session():
@@ -196,7 +145,7 @@ def main():
 
     print(f"Tagging {git_info['tag']}...")
 
-    _git_tag(git_info["tag"])
+    git.tag(git_info["tag"])
 
     print("Preparing artifacts...")
 
@@ -206,7 +155,7 @@ def main():
     print("Preparing release description...")
 
     description = config.prepare_description(git_info, _Artifacts.items)
-    description = _edit_content(git_info["editor"], description)
+    description = git.open_editor(description)
 
     print("Creating release...")
     gh = _github_session()
