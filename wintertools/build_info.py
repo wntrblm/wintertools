@@ -45,24 +45,30 @@ def generate_build_info_c(configuration):
         text=True,
     ).stdout.strip()
 
-    release = subprocess.run(
-        ["git", "describe", "--always", "--tags", "--abbrev=0"],
-        capture_output=True,
-        check=True,
-        text=True,
-    ).stdout.strip()
+    try:
+        release = subprocess.run(
+            ["git", "describe", "--always", "--tags", "--abbrev=0"],
+            capture_output=True,
+            check=True,
+            text=True,
+        ).stdout.strip()
+    except subprocess.CalledProcessError:
+        release = "None"
 
     if "." in release:
         year, month, day = release.split(".", 3)
     else:
         year, month, day = 0, 0, 0
 
-    revision = subprocess.run(
-        ["git", "describe", "--always", "--tags", "--dirty"],
-        capture_output=True,
-        check=True,
-        text=True,
-    ).stdout.strip()
+    try:
+        revision = subprocess.run(
+            ["git", "describe", "--always", "--tags", "--dirty"],
+            capture_output=True,
+            check=True,
+            text=True,
+        ).stdout.strip()
+    except subprocess.CalledProcessError:
+        revision = "None"
 
     compiler = f"gcc {gcc_version}"
 

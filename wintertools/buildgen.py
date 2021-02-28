@@ -195,6 +195,29 @@ class SAMD21(CortexM):
         return defines
 
 
+class SAMD51(CortexM):
+    CPU = "cortex-m4"
+    FPU = "fpv4-sp-d16"
+    FLOAT_ABI = "hard"
+
+    @classmethod
+    def defines(cls, mcu: str) -> dict:
+        defines = super().defines()
+        defines.update(
+            {
+                # Used in CMSIS device support header. See sam.h.
+                f"__{mcu}__": 1,
+                # Used in some third_party code, like libwinter, to detect SAM D variants.
+                "SAMD51": 1,
+                # Used in CMSIS math headers.
+                # see https://github.com/ARM-software/CMSIS/blob/master/CMSIS/Include/arm_math.h#L84-L88
+                "ARM_MATH_CM4": 1,
+            }
+        )
+
+        return defines
+
+
 # Collection helpers
 
 
@@ -246,6 +269,7 @@ def toolchain_variables(
     linker_flags: list,
     includes: list,
     defines: list,
+    libraries: list = None,
     builddir: str = "./build",
 ):
     """Outputs Ninja needed for the GCC-related rules."""
@@ -254,6 +278,9 @@ def toolchain_variables(
 
     if isinstance(includes, list):
         includes = format_includes(includes)
+
+    if libraries is None:
+        libraries = []
 
     writer.variable("builddir", "./build")
     writer.newline()
@@ -267,6 +294,8 @@ def toolchain_variables(
     writer.variable("cc_defines", defines)
     writer.newline()
     writer.variable("ld_flags", " ".join(linker_flags))
+    writer.newline()
+    writer.variable("ld_libraries", " ".join(libraries))
     writer.newline()
 
 
@@ -287,7 +316,7 @@ def cc_rule(writer):
 def ld_rule(writer):
     writer.rule(
         name="ld",
-        command=f"{GCC} $ld_flags $in -o $out",
+        command=f"{GCC} $ld_flags $in $ld_libraries -o $out",
         description="Link $out",
     )
     writer.newline()
