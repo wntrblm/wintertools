@@ -14,14 +14,22 @@ import typing
 
 from wintertools import tui
 
-COLUMNS = tui.Columns("<15", ">8", "^5", ">8", ">7")
-COLUMNS_ALT = tui.Columns("<15", ">8", "<13", ">7")
+COLUMNS = tui.Columns("<15", ">10", "^5", ">10", ">7")
+COLUMNS_ALT = tui.Columns("<15", ">10", "<13", ">9")
 BAR = tui.Bar(width=len(COLUMNS))
 FIXED_SEG_COLOR = (255, 158, 221)
 GRADIENT_START = colorsys.hsv_to_rgb(188 / 360, 0.8, 1.0)
 GRADIENT_END = colorsys.hsv_to_rgb(0.8, 0.8, 1.0)
 PLUS_COLOR = (1.0, 1.0, 0.5)
 MINUS_COLOR = (127, 255, 191)
+
+
+def sizeof_fmt(num, suffix='B'):
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.2f %s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.2f %s%s" % (num, 'Yi', suffix)
 
 
 def _color_for_percent(percentage):
@@ -61,7 +69,7 @@ class _MemorySection:
     fixed: bool = False
 
 
-def _print_memory_sections(name, size, *sections):
+def _print_memory_sections(name, size, human_readable, *sections):
     used = sum(s.size for s in sections)
     used_fixed = sum(s.size for s in sections if s.fixed)
     used_percent = used / size
@@ -70,10 +78,10 @@ def _print_memory_sections(name, size, *sections):
     COLUMNS.draw(
         f"{name} used:",
         color,
-        f"{used:,}",
+        f"{sizeof_fmt(used)}" if human_readable else f"{used:,}",
         tui.reset,
         "/",
-        f"{size:,}",
+        f"{sizeof_fmt(size)}" if human_readable else f"{size:,}",
         color,
         f"({round(used_percent * 100)}%)",
     )
@@ -105,7 +113,7 @@ def _print_memory_sections(name, size, *sections):
         COLUMNS_ALT.draw(
             color,
             f"{sec.name}: ",
-            f"{sec.size:,}",
+            f"{sizeof_fmt(sec.size)}" if human_readable else f"{sec.size:,}",
             *last_size_sec,
             color,
             f"({round(sec.size / size * 100)}%)",
@@ -122,6 +130,7 @@ def main():
     parser.add_argument("--bootloader-size", default=None)
     parser.add_argument("--no-last", type=bool, default=False)
     parser.add_argument("--size-prog", type=pathlib.Path, default="arm-none-eabi-size")
+    parser.add_argument("--human-readable", help="print sizes in human-readable format", action="store_true")
 
     args = parser.parse_args()
 
@@ -149,13 +158,16 @@ def main():
     _print_memory_sections(
         "Flash",
         args.flash_size,
+        args.human_readable,
         _MemorySection(name="Bootloader", size=bootloader_size, fixed=True),
         _MemorySection(name="Program", size=program_size, last_size=last_program_size),
     )
     print()
+    print()
     _print_memory_sections(
         "RAM",
         args.ram_size,
+        args.human_readable,
         _MemorySection(name="Stack", size=stack_size, fixed=True),
         _MemorySection(
             name="Variables", size=variables_size, last_size=last_variables_size
