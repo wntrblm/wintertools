@@ -119,6 +119,7 @@ def main():
     parser.add_argument("elf_file", type=pathlib.Path)
     parser.add_argument("--flash-size", type=lambda x: int(x, 0))
     parser.add_argument("--ram-size", type=lambda x: int(x, 0))
+    parser.add_argument("--bootloader-size", default=None)
     parser.add_argument("--no-last", type=bool, default=False)
     parser.add_argument("--size-prog", type=pathlib.Path, default="arm-none-eabi-size")
 
@@ -138,6 +139,10 @@ def main():
     bootloader_size, program_size, stack_size, variables_size = _analyze_elf(
         args.elf_file, args.size_prog
     )
+
+    if args.bootloader_size:
+        bootloader_size = int(args.bootloader_size)
+
     if last_file.exists():
         last_data = json.loads(last_file.read_text())
 
