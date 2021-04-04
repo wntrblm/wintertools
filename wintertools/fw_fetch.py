@@ -10,7 +10,7 @@ import xml.dom.minidom
 
 import requests
 
-from wintertools import fs
+from wintertools import fs, log
 
 BOOTLOADER_RELEASES_URL = (
     "https://api.github.com/repos/adafruit/uf2-samdx1/releases/latest"
@@ -48,6 +48,10 @@ def find_latest_circuitpython(device_name):
         if "-" in release:
             continue
 
+        # If it's old, skip it.
+        if "OLD" in key:
+            continue
+
         return CIRCUITPYTHON_RELEASES_BASE + key
 
     raise RuntimeError(f"Could not find CircuitPython release for {device_name}")
@@ -55,9 +59,11 @@ def find_latest_circuitpython(device_name):
 
 def latest_bootloader(device_name):
     bootloader_url = find_latest_bootloader(device_name)
+    log.info(f"Downloading bootloader {bootloader_url}...")
     return fs.download_file_to_cache(bootloader_url, f"bootloader.{device_name}.bin")
 
 
 def latest_circuitpython(device_name):
     cp_url = find_latest_circuitpython(device_name)
+    log.info(f"Downloading CircuitPython {cp_url}...")
     return fs.download_file_to_cache(cp_url, f"circuitpython.{device_name}.uf2")
