@@ -70,7 +70,7 @@ class Desktop:
     @classmethod
     def common_flags(cls) -> list:
         return [
-            "-funsigned-char -fshort-enums",
+            "-funsigned-char",
             # Because of how Ninja runs gcc it doesn't know that it has an interactive
             # terminal and disables color output. This makes sure it always outputs color.
             "-fdiagnostics-color=always",
@@ -94,8 +94,11 @@ class Desktop:
         ]
 
     @classmethod
-    def ld_flags(cls):
-        return []
+    def ld_flags(cls, use_cxx=False):
+        if use_cxx:
+            return ["-std=gnu17", "-lc++"]
+        else:
+            return []
 
     @classmethod
     def defines(cls) -> dict:
@@ -271,6 +274,8 @@ def toolchain_variables(
     defines: list,
     libraries: list = None,
     builddir: str = "./build",
+    c_flags: list = None,
+    cxx_flags: list = None,
 ):
     """Outputs Ninja needed for the GCC-related rules."""
     if isinstance(defines, dict):
@@ -282,12 +287,20 @@ def toolchain_variables(
     if libraries is None:
         libraries = []
 
+    if c_flags is None:
+        c_flags = ["-std=gnu17", "-x c"]
+
+    if cxx_flags is None:
+        cxx_flags = ["-std=gnu++17", "-x c++"]
+
     writer.variable("builddir", "./build")
     writer.newline()
     writer.variable(
         "cc_flags",
         " ".join(cc_flags),
     )
+    writer.variable("c_flags", " ".join(c_flags))
+    writer.variable("cxx_flags", " ".join(cxx_flags))
     writer.newline()
     writer.variable("cc_includes", includes)
     writer.newline()
@@ -305,10 +318,21 @@ def toolchain_variables(
 def cc_rule(writer):
     writer.rule(
         name="cc",
-        command=f"{GCC} $cc_flags $cc_includes $cc_defines -MMD -MT $out -MF $out.d -c $in -o $out",
+        command=f"{GCC} $cc_flags $c_flags $cc_includes $cc_defines -MMD -MT $out -MF $out.d -c $in -o $out",
         depfile="$out.d",
         deps="gcc",
-        description="Compile $in",
+        description="Compile (C) $in",
+    )
+    writer.newline()
+
+
+def cxx_rule(writer):
+    writer.rule(
+        name="cxx",
+        command=f"{GCC} $cc_flags $cxx_flags $cc_includes $cc_defines -MMD -MT $out -MF $out.d -c $in -o $out",
+        depfile="$out.d",
+        deps="gcc",
+        description="Compile (C++) $in",
     )
     writer.newline()
 
@@ -387,6 +411,7 @@ def clang_tidy_rule(writer):
 
 def common_rules(writer):
     cc_rule(writer)
+    cxx_rule(writer)
     ld_rule(writer)
     output_format_rules(writer)
     runcmd_rules(writer)
@@ -404,7 +429,12 @@ def object_build(writer, src: pathlib.Path) -> pathlib.Path:
         src.with_suffix(".o")
     )
 
-    writer.build(outputs=str(object_path), rule="cc", inputs=str(src))
+    if src.suffix == ".c":
+        rule = "cc"
+    elif src.suffix in (".cpp", ".cxx", ".cc"):
+        rule = "cxx"
+
+    writer.build(outputs=str(object_path), rule=rule, inputs=str(src))
 
     writer.newline()
     return object_path
