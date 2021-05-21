@@ -82,12 +82,12 @@ class Desktop:
             # Error on all warnings and enable several useful warnings.
             # -Wall turns on warning for questionable patterns that should be easy to fix.
             # -Wextra adds a few more on top of -Wall that should also be easy to fix.
-            # -Wdouble-promotion warns when a value is automatially promoted to a double.
+            # -Wdouble-promotion warns when a value is automatically promoted to a double.
             #   this is especially useful because any code that deals with doubles will
             #   be large and slow and we definitely want to avoid that.
             # -Wformat=2 checks calls to printf & friends to make sure the format specifiers
             #   match the types of the arguments.
-            # -Wundef checks for undefined indentifiers in #if macros.
+            # -Wundef checks for undefined identifiers in #if macros.
             "-W -Wall -Wextra -Werror -Wformat=2 -Wundef",
             # Other flags that might be useful:
             # -Wconversion warn about implicit integer conversions
@@ -149,12 +149,12 @@ class CortexM:
             # -Wall turns on warning for questionable patterns that should be easy to fix.
             # -Wextra adds a few more on top of -Wall that should also be easy to fix.
             # -Wshadow warns about a local symbol shadowing a global symbol.
-            # -Wdouble-promotion warns when a value is automatially promoted to a double.
+            # -Wdouble-promotion warns when a value is automatically promoted to a double.
             #   this is especially useful because any code that deals with doubles will
             #   be large and slow and we definitely want to avoid that.
             # -Wformat=2 checks calls to printf & friends to make sure the format specifiers
             #   match the types of the arguments.
-            # -Wundef checks for undefined indentifiers in #if macros.
+            # -Wundef checks for undefined identifiers in #if macros.
             "-W -Wall -Wextra -Werror -Wshadow -Wdouble-promotion -Wformat=2 -Wundef",
             # Other flags that might be useful:
             # -Wconversion warn about implicit integer conversions
