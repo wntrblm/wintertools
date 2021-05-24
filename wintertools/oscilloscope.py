@@ -11,6 +11,7 @@ SCPI & Programming reference: https://storage.googleapis.com/files.winterbloom.c
 import time
 
 import pyvisa.errors
+
 from wintertools import log
 
 
@@ -94,8 +95,8 @@ class Oscilloscope:
         except ValueError:
             return 0
 
-    def set_trigger_level(self, trig_source: str, trig_level: float):
-        self.port.write(f"{trig_source}:trig_level {trig_level}V")
+    def set_trigger_level(self, trig_source: str, trig_level: str):
+        self.port.write(f"{trig_source}:trig_level {trig_level}")
 
     def show_measurement(self, trace: str, parameter: str):
         self.port.write(f"parameter_custom {trace},{parameter}")
