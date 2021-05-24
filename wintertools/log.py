@@ -83,7 +83,7 @@ def success(*args, **kwargs):
 
 def section(name, depth=1, **kwargs):
     marker = "►" * depth
-    output = f"{tui.bold}{tui.underline}{marker} {name}\n"
+    output = f"\n{tui.bold}{tui.underline}{marker} {name}\n"
     _print_term((0.5, 0.8, 1.0), output)
     marker = "#" * depth
     _print_file(f"\n{marker} {name}\n")
