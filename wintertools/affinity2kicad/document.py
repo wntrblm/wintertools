@@ -132,13 +132,15 @@ class SVGDocument:
             el.set("screen_height", str(screen_height))
             return
 
-    def hide_all_layers(self, but=None):
+
+    def hide_all_layers(self, ids=None, but=None):
         but = but or []
         found = False
 
-        for node in self.etree:
-            if not node.get("id", None):
-                print("Warning: node without id in top-level of SVG.")
+        for node in self.etree.iter("{http://www.w3.org/2000/svg}g"):
+            if node.get("id", None) not in ids:
+                continue
+
             if node.attrib["id"] not in but:
                 node.attrib["visibility"] = "hidden"
             else:
@@ -153,8 +155,11 @@ class SVGDocument:
     def recolor(self, id, replacement_style="fill:black;"):
         recolor(self.csstree, id, replacement_style)
 
+    def tostring(self):
+        return ElementTree.tostring(self.etree)
+
     def render(self, dst):
-        tree = cairosvg.parser.Tree(bytestring=ElementTree.tostring(self.etree))
+        tree = cairosvg.parser.Tree(bytestring=self.tostring())
         surface = cairosvg.surface.PNGSurface(tree, output=None, dpi=self.dpi)
 
         with open(dst, "wb") as fh:
