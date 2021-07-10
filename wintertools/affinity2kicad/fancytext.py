@@ -36,7 +36,6 @@ class FancyText:
         self.bbox = [0, 0, 0, 0]
 
     def generate(self, text, layer="F.SilkS"):
-        print("Generating fancytext.")
         workdir = os.path.join(".", ".cache")
         png_path = os.path.join(workdir, "fancytext.png")
         mod_path = os.path.join(workdir, "fancytext.kicad_mod")
@@ -50,6 +49,11 @@ class FancyText:
         svg.render(png_path)
 
         bitmap2component(src=png_path, dst=mod_path, layer=layer, invert=True, dpi=DPI)
+
+        printable_text = text.replace("\n", "⏎")[:20]
+        print(
+            f'Generated fancytext "{printable_text}..." {self.bbox[2]:.1f} mm x {self.bbox[3]:.1f} mm.'
+        )
 
         return mod_path
 

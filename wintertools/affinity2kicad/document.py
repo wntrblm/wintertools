@@ -132,7 +132,6 @@ class SVGDocument:
             el.set("screen_height", str(screen_height))
             return
 
-
     def hide_all_layers(self, ids=None, but=None):
         but = but or []
         found = False
@@ -155,8 +154,11 @@ class SVGDocument:
     def recolor(self, id, replacement_style="fill:black;"):
         recolor(self.csstree, id, replacement_style)
 
-    def tostring(self):
+    def tobytestring(self):
         return ElementTree.tostring(self.etree)
+
+    def tostring(self):
+        return ElementTree.tostring(self.etree, encoding="unicode")
 
     def render(self, dst):
         tree = cairosvg.parser.Tree(bytestring=self.tostring())

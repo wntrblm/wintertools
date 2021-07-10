@@ -3,8 +3,10 @@
 # Full text available at: https://opensource.org/licenses/MIT
 
 from wintertools.affinity2kicad.bitmap2component import bitmap2component
+from wintertools import tui
+import itertools
+import concurrent.futures
 import os.path
-import multiprocessing
 
 LAYERS = {
     "FSilkS": "F.SilkS",
@@ -32,7 +34,6 @@ class Converter:
             self.convert_layers()
 
     def convert_outline(self):
-        print("Converting outline.")
         rects = list(self.doc.query_all("#EdgeCuts rect"))
 
         if not rects:
@@ -74,11 +75,11 @@ class Converter:
             width = self.doc.to_mm(rect.get("screen_width"), 1)
             height = self.doc.to_mm(rect.get("screen_height"), 1)
             self.pcb.add_outline(x, y, width, height)
-            print(f"Added rect to Edge.Cuts ({x:.1f}, {y:.1f}, {width:.1f}, {height:.1f}).")
+            print(
+                f"Added {width:.1f} mm x {height:.1f} mm rectangle to Edge.Cuts at ({x:.1f} mm, {y:.1f} mm)."
+            )
 
     def convert_drills(self):
-        print("Converting drills.")
-
         circles = list(self.doc.query_all("#Drill circle"))
 
         for el in circles:
@@ -91,17 +92,36 @@ class Converter:
         print(f"Converted {len(circles)} drills.")
 
     def convert_layers(self):
-        print("Converting cosmestic layers.")
-        p = multiprocessing.Pool()
+        columns = tui.Columns(*["<10"] * len(LAYERS))
+        columns.draw(*LAYERS.keys())
+        results = [((0.4, 0.4, 0.4), "...") for _ in LAYERS]
 
-        with p:
-            mods = p.starmap(
-                convert_layer,
-                [(self.doc, self._tmpdir, src, dst) for src, dst in LAYERS.items()],
-            )
+        with concurrent.futures.ProcessPoolExecutor() as executor, tui.Updateable() as updateable:
+            futures = [
+                executor.submit(convert_layer, self.doc, self._tmpdir, src, dst)
+                for src, dst in LAYERS.items()
+            ]
 
-        for mod in filter(None, mods):
-            self.pcb.add_mod(mod, self.centroid[0], self.centroid[1], relative=False)
+            columns.draw(*itertools.chain(*results))
+            updateable.update()
+
+            for n, f in enumerate(concurrent.futures.as_completed(futures)):
+                mod = f.result()
+
+                if mod:
+                    mod, cached = mod
+                    self.pcb.add_mod(
+                        mod, self.centroid[0], self.centroid[1], relative=False
+                    )
+                    if cached:
+                        results[n] = ((0.5, 0.5, 1.0), "cached")
+                    else:
+                        results[n] = ((0.5, 1.0, 0.5), "done")
+                else:
+                    results[n] = ((0.4, 0.4, 0.4), "empty")
+
+                columns.draw(*itertools.chain(*results))
+                updateable.update()
 
     @property
     def centroid(self):
@@ -109,23 +129,30 @@ class Converter:
 
 
 def convert_layer(doc, tmpdir, src_layer_name, dst_layer_name):
+    svg_filename = os.path.join(tmpdir, f"output-{dst_layer_name}.svg")
     png_filename = os.path.join(tmpdir, f"output-{dst_layer_name}.png")
     mod_filename = os.path.join(tmpdir, f"output-{dst_layer_name}.kicad_mod")
     layers = list(LAYERS.keys()) + ["EdgeCuts", "Drill"]
 
     if not doc.hide_all_layers(ids=layers, but=src_layer_name):
-        print(f"Layer {src_layer_name} not found.")
         return
 
-    print(f"Rendering {dst_layer_name}.")
-
     doc.recolor(src_layer_name)
+    svg_text = doc.tostring()
+
+    # See if the cached layer hasn't changed, if so, don't bother re-rendering.
+    if os.path.exists(mod_filename) and os.path.exists(svg_filename):
+        with open(svg_filename, "r") as fh:
+            cached_svg_text = fh.read()
+
+        if svg_text.strip() == cached_svg_text.strip():
+            return mod_filename, True
+
+    # No cached version, so render it and convert it.
+    with open(svg_filename, "w") as fh:
+        fh.write(svg_text)
+
     doc.render(png_filename)
-
-    # For debugging, write out the SVG for the layer as well.
-    with open(os.path.join(tmpdir, f"output-{dst_layer_name}.svg"), "w") as fh:
-        fh.write(doc.tostring().decode("utf-8"))
-
     bitmap2component(
         src=png_filename,
         dst=mod_filename,
@@ -134,6 +161,4 @@ def convert_layer(doc, tmpdir, src_layer_name, dst_layer_name):
         dpi=doc.dpi,
     )
 
-    print(f"Converted {dst_layer_name}.")
-
-    return mod_filename
+    return mod_filename, False

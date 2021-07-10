@@ -113,6 +113,8 @@ class Updateable:
             _stdout_stack.append(sys.stdout)
             sys.stdout = self._buf
 
+        return self
+
     def __exit__(self, exc_type, exc_value, exc_traceback):
         sys.stdout.write(Escape.SHOW_CURSOR)
 
@@ -129,6 +131,8 @@ class Updateable:
 
 
 class Segment:
+    FILL_CHAR = "▓"
+
     def __init__(self, width, color=(1.0, 1.0, 1.0), char="▓"):
         self.width = width
         self.color = color
