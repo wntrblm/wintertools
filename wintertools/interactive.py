@@ -5,6 +5,7 @@
 """Helpers for interactive console programs using the keyboard or gamepad."""
 
 import time
+
 from wintertools import keyboard, tui
 from wintertools.gamepad import gamepad
 
@@ -30,7 +31,7 @@ def continue_when_ready():
 
 
 class adjust_value:
-    def __init__(self, value, min=None, max=None, interval=0.1):
+    def __init__(self, value, min=None, max=None, interval=1 / 10):
         self.value = value
         self._min = min
         self._max = max
@@ -51,6 +52,9 @@ class adjust_value:
     def __iter__(self):
         last_update = time.monotonic()
 
+        # Yield initial value once.
+        yield self.value
+
         while True:
             if gamepad.connected:
                 gamepad.update()
@@ -65,8 +69,10 @@ class adjust_value:
                         yield self.value
 
                 if gamepad.A.pressed:
-                    yield self.value
                     return
+
+                if gamepad.B.pressed:
+                    yield self.value
 
             else:
                 key = keyboard.read()
