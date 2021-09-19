@@ -11,7 +11,7 @@ import time
 import rtmidi
 import rtmidi.midiutil
 
-from wintertools import teeth, log
+from wintertools import log, teeth
 
 SYSEX_START = 0xF0
 SYSEX_END = 0xF7
@@ -26,6 +26,7 @@ def wait_for_message(port_in, timeout=1):
             return msg
 
         if time.monotonic() > start + timeout:
+            log.error(f"Timed out while waiting for MIDI message on {port_in}")
             return None
 
 
@@ -45,7 +46,19 @@ def open_midiport(port, *args, **kwargs):
 
 
 class MIDIDevice:
+    _instance = None
+
+    @classmethod
+    def get(cls):
+        if cls._instance is None:
+            cls._instance = cls()
+
+        return cls._instance
+
     def __init__(self):
+        if self._instance:
+            log.warning(f"There is already an instance of {self.__class__}.")
+
         in_port_name = getattr(
             self, "MIDI_PORT_IN_NAME", getattr(self, "MIDI_PORT_NAME", None)
         )
