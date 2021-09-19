@@ -90,9 +90,10 @@ class Gamepad:
         if self._device is None:
             return False
 
-        report = self._device.read(64)
-        if not report or report == self._last_report:
-            return False
+        report = None
+        while not report:
+            report = self._device.read(64)
+            pass
 
         self.UP = report[_ButtonMask.UP[0]] == _ButtonMask.UP[1]
         self.DOWN = report[_ButtonMask.DOWN[0]] == _ButtonMask.DOWN[1]
