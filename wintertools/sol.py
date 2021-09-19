@@ -64,4 +64,4 @@ class Sol(midi.MIDIDevice):
             ]
         )
 
-        self.sysex(0x01, data=[channel] + list(encoded), response=True)
+        return self.sysex(0x01, data=[channel] + list(encoded), response=True)
