@@ -62,6 +62,4 @@ while True:
     elif channel == 3:
         outputs.cv_d = voltage
 
-    print(voltage)
-
     midi_out.write(bytearray([smolmidi.SYSEX, SYSEX_MARKER, 0x01, smolmidi.SYSEX_END]))
