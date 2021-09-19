@@ -53,7 +53,7 @@ def _analyze_elf(elf, size_prog):
     program_size = (
         sections[".text"] + sections.get(".relocate", 0) + sections.get(".data", 0)
     )
-    stack_size = sections[".stack"]
+    stack_size = sections.get(".stack", 0)
     variables_size = (
         sections.get(".relocate", 0) + sections.get(".data", 0) + sections[".bss"]
     )
