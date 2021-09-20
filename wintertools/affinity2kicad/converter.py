@@ -132,9 +132,10 @@ def convert_layer(doc, tmpdir, src_layer_name, dst_layer_name):
     svg_filename = os.path.join(tmpdir, f"output-{dst_layer_name}.svg")
     png_filename = os.path.join(tmpdir, f"output-{dst_layer_name}.png")
     mod_filename = os.path.join(tmpdir, f"output-{dst_layer_name}.kicad_mod")
-    layers = list(LAYERS.keys()) + ["EdgeCuts", "Drill"]
 
-    if not doc.hide_all_layers(ids=layers, but=src_layer_name):
+    doc = doc.copy()
+
+    if not doc.remove_layers(keep=src_layer_name):
         return
 
     doc.recolor(src_layer_name)

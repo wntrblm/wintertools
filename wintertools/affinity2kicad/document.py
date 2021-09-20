@@ -75,6 +75,9 @@ class SVGDocument:
         self.etree = ElementTree.XML(self.svg_bytes)
         self.csstree = cssselect2.ElementWrapper.from_xml_root(self.etree)
 
+    def copy(self):
+        return SVGDocument(text=self.tostring(), dpi=self.dpi)
+
     @property
     def dpmm(self):
         return 25.4 / self.dpi
@@ -132,16 +135,13 @@ class SVGDocument:
             el.set("screen_height", str(screen_height))
             return
 
-    def hide_all_layers(self, ids=None, but=None):
-        but = but or []
+    def remove_layers(self, keep=None):
+        keep = keep or []
         found = False
 
-        for node in self.etree.iter("{http://www.w3.org/2000/svg}g"):
-            if node.get("id", None) not in ids:
-                continue
-
-            if node.attrib["id"] not in but:
-                node.attrib["visibility"] = "hidden"
+        for node in list(self.etree):
+            if node.attrib.get("id", "") not in keep:
+                self.etree.remove(node)
             else:
                 node.attrib["visibility"] = "visible"
                 found = True
