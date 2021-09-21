@@ -17,7 +17,7 @@ SYSEX_START = 0xF0
 SYSEX_END = 0xF7
 
 
-def wait_for_message(port_in, timeout=1):
+def wait_for_message(port_in, timeout=5):
     start = time.monotonic()
     while True:
         msg = port_in.get_message()
@@ -26,8 +26,9 @@ def wait_for_message(port_in, timeout=1):
             return msg
 
         if time.monotonic() > start + timeout:
-            log.error(f"Timed out while waiting for MIDI message on {port_in}")
-            return None
+            raise IOError(f"Timed out while waiting for MIDI message.")
+        else:
+            time.sleep(0.001)
 
 
 # A wrapper over rtmidi.open_midiport that allows re-trying.
