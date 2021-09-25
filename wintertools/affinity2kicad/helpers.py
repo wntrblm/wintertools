@@ -5,8 +5,8 @@
 
 def add_eurorack_mounting_holes(converter, hp=0):
     offset = 5.08 * hp
-    converter.pcb.add_slotted_hole(7.5 + offset, 3, 3.22, 4)
-    converter.pcb.add_slotted_hole(7.5 + offset, converter.bbox[3] - 3, 3.22, 4)
+    converter.pcb.add_slotted_hole(7.5 + offset, 3, 3.25, 4)
+    converter.pcb.add_slotted_hole(7.5 + offset, converter.bbox[3] - 3, 3.25, 4)
     converter.pcb.add_horizontal_measurement(
         0,
         3,

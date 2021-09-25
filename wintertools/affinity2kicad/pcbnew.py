@@ -356,6 +356,6 @@ def _slotted_hole_template(x, y, hole_size, slot_size):
         (descr "Drill {hole_size:.1f} mm, slotted")
         (tags "")
         (attr virtual)
-        (pad "" np_thru_hole roundrect (at 0 0) (size {slot_size:.2f} {hole_size:.1f}) (drill oval {slot_size:.2f} {hole_size:.1f}) (layers *.Cu *.Mask) (roundrect_rratio 0.5) (clearance 0.1) (zone_connect 0))
+        (pad "" np_thru_hole roundrect (at 0 0) (size {slot_size:.2f} {hole_size:.2f}) (drill oval {slot_size:.2f} {hole_size:.1f}) (layers *.Cu *.Mask) (roundrect_rratio 0.5) (clearance 0.1) (zone_connect 0))
     )
 """
