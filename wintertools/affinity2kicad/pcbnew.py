@@ -47,6 +47,16 @@ class PCB:
             )
         )
 
+    def add_line(self, x1, y1, x2, y2):
+        self.text.write(
+            f"(gr_line (start {x1 + self.offset[0]} {y1 + self.offset[1]}) (end {x2 + self.offset[0]} {y2 + self.offset[1]}) (layer Edge.Cuts) (width 0.5))\n"
+        )
+
+    def add_arc(self, center_x, center_y, end_x, end_y, rotation):
+        self.text.write(
+            f"(gr_arc (start {center_x + self.offset[0]} {center_y + self.offset[1]}) (end {end_x + self.offset[0]} {end_y + self.offset[1]}) (angle {rotation}) (layer Edge.Cuts) (width 0.5))\n"
+        )
+
     def add_outline(self, x, y, width, height):
         self.text.write(
             _outline_template(x + self.offset[0], y + self.offset[1], width, height)
