@@ -2,7 +2,6 @@
 # Published under the standard MIT License.
 # Full text available at: https://opensource.org/licenses/MIT
 
-from svgpathtools.path import CubicBezier
 from wintertools.affinity2kicad.bitmap2component import bitmap2component
 from wintertools import tui
 import itertools

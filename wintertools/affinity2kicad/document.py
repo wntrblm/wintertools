@@ -3,7 +3,6 @@
 # Full text available at: https://opensource.org/licenses/MIT
 
 import math
-import decimal
 import re
 from defusedxml import ElementTree
 import cssselect2
