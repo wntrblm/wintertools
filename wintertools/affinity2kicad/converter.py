@@ -209,7 +209,7 @@ def convert_layer(doc, tmpdir, src_layer_name, dst_layer_name):
 
     doc = doc.copy()
 
-    if not doc.remove_layers(keep=src_layer_name):
+    if not doc.remove_layers(keep=[src_layer_name]):
         return
 
     doc.recolor(src_layer_name)

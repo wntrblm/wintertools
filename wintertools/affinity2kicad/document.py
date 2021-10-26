@@ -140,11 +140,23 @@ class SVGDocument:
         found = False
 
         for node in list(self.etree):
-            if node.attrib.get("id", "") not in keep:
-                self.etree.remove(node)
-            else:
+            if node.attrib.get("id", "") in keep:
                 node.attrib["visibility"] = "visible"
                 found = True
+                continue
+
+            # Check if this is a group with the layer as its single child.
+            elif (
+                node.tag == "{http://www.w3.org/2000/svg}g"
+                and node.attrib.get("id", None) is None
+            ):
+                children = list(node)
+                if children and children[0].attrib.get("id", "") in keep:
+                    node.attrib["visibility"] = "visible"
+                    found = True
+                    continue
+
+            self.etree.remove(node)
 
         return found
 
