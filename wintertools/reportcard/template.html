@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style type="text/css">
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    * {
+      margin: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      width: 1000px;
+      margin: 0 auto;
+    }
+
+    body {
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    img,
+    picture,
+    video,
+    canvas,
+    svg {
+      display: block;
+      max-width: 100%;
+      margin: 50px auto 50px auto;
+    }
+
+    input,
+    button,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    p,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      overflow-wrap: break-word;
+    }
+
+    body {
+      background: white;
+      font-family: "IBM Plex Mono", system;
+      font-size: 40px;
+    }
+
+    h1 {
+      font-size: 100px;
+      text-align: center;
+      font-family: "Space Mono";
+      font-style: italic;
+      font-weight: bold;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 75px;
+      letter-spacing: 20px;
+      margin-bottom: 50px;
+    }
+
+    h2::after {
+      content: "";
+      display: block;
+      background: black;
+      height: 2px;
+      left: 10%;
+      position: relative;
+      width: 80%;
+    }
+
+    section {
+      margin-top: 50px;
+      font-weight: bold;
+    }
+
+    section:first-of-type {
+      margin-top: 100px;
+    }
+
+    section dl {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      width: 80%;
+      margin: 0 auto;
+    }
+
+    section dt {
+      width: 80%;
+    }
+
+    section dd {
+      width: 20%;
+      text-align: right;
+      font-weight: normal;
+    }
+
+    section dl.stack dt {
+      width: 100%;
+    }
+
+    section dl.stack dd {
+      text-align: justify;
+      width: 100%;
+    }
+
+    section p {
+      width: 80%;
+      margin: 0 auto;
+    }
+
+    footer {
+      margin: 150px auto 0 auto;
+      width: 80%;
+      text-align: center;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    .italic {
+      font-style: italic;
+    }
+
+    .logo {
+      width: 80%;
+      margin: 0 auto 100px auto;
+    }
+
+    .chart {
+      height: auto;
+      width: 100%;
+    }
+
+    .material-icons {
+      font-size: 50px;
+      line-height: initial;
+      display: block;
+    }
+
+    .firmware {
+      text-align: center;
+      font-weight: normal;
+    }
+  </style>
+</head>
+
+<body>
+  <img src="{{logo}}" class="logo" />
+  <h1>{{report.name}}</h1>
+  <p class="text-center italic">Tested on {{report.date.strftime("%b")}} {{report.date.day}}, {{report.date.year}}
+  </p>
+  {% for section in report.sections: %}
+  <section>
+    <h2>{{section.name}}</h2>
+    {% for item in section.items %}
+    {% if item.type == "text" %}
+    <p class="{{item.class_}}">
+      {{item.text}}
+    </p>
+    {% elif item.type == "label_value" %}
+    <dl class="{{item.class_}}">
+      <dt>{{item.label}}</dt>
+      <dd>{{item.value}}</dd>
+    </dl>
+    {% elif item.type == "pass_fail" %}
+    <dl class="{{item.class_}}">
+      <dt>{{item.label}}</dt>
+      <dd>{{material_icon(item.icon)}}</dd>
+    </dl>
+    {% elif item.type in ("image", "line_graph") %}
+    <img src="{{item.src}}" class="{{item.class_}}" />
+    {% endif %}
+    {% endfor %}
+  </section>
+  {% endfor %}
+  <footer>
+    <p>Made with ❤︎ in Atlanta, Georgia</p>
+    <p>support@winterbloom.com</p>
+  </footer>
+  <img src="{{make_qrcode(report.ulid)}}" />
+</body>
+
+</html>

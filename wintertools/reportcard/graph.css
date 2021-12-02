@@ -1,0 +1,72 @@
+.bg {
+    fill: white;
+}
+text {
+    font-family: "IBM Plex Mono", system;
+    font-size: 40px;
+    text-anchor: middle;
+}
+text.left {
+    text-anchor: start;
+}
+text.right {
+    text-anchor: end;
+}
+text.module-name {
+    font-size: 100px;
+    text-anchor: middle;
+    font-family: "Space Mono";
+    font-style: italic;
+    font-weight: bold;
+}
+text.test-date {
+    font-style: italic;
+}
+text.header1 {
+    font-size: 75px;
+    letter-spacing: 20px;
+}
+.section-divider {
+    stroke: black;
+    stroke-width: 5px;
+    transform: translate(0, 10px);
+}
+text.axis {
+    font-family: "IBM Plex Mono";
+    font-size: 40px;
+    text-anchor: middle;
+    dominant-baseline: hanging;
+}
+text.axis.label {
+    font-style: italic;
+}
+text.axis.x-axis.label {
+    transform: translate(0, 30px);
+}
+text.axis.y-axis.label {
+    transform: rotate(-90deg) translate(0, -30px);
+    dominant-baseline: auto;
+}
+text.axis.range-min, text.axis.range-max {
+    font-size: 30px;
+    transform: translate(0, 15px);
+}
+text.axis.range-min {
+    text-anchor: start;
+}
+text.axis.range-max {
+    text-anchor: end;
+}
+text.y-axis.range-min, text.y-axis.range-max {
+    text-anchor: end;
+    dominant-baseline: hanging;
+    transform: translate(-15px, 0);
+}
+text.y-axis.range-min {
+    dominant-baseline: auto;
+}
+.grid-lines {
+    stroke-width: 3;
+    stroke: black;
+    stroke-dasharray: 2 5;
+}
