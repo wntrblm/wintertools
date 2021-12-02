@@ -10,93 +10,79 @@ SCPI & Programming reference: https://storage.googleapis.com/files.winterbloom.c
 
 import time
 
-import pyvisa.errors
-
-from wintertools import log
+from . import visa
 
 
-class Oscilloscope:
-    RESOURCE_NAME = "USB0::0xF4EC::0xEE38::SDSMMEBD3R6070::INSTR"
-    TIMEOUT = 10 * 1000
-
-    def __init__(self, resource_manager):
-        self._connect(resource_manager)
+class Oscilloscope(visa.Instrument):
+    def __init__(self, resource_manager=None, resource_name=None):
+        super.__init__(self, resource_manager, resource_name)
         self._time_div = None
 
-    def _connect(self, resource_manager):
-        try:
-            resource = resource_manager.open_resource(self.RESOURCE_NAME)
-        except pyvisa.errors.VisaIOError as exc:
-            log.error("Couldn't connect to oscilloscope", exc=exc)
-        resource.timeout = self.TIMEOUT
-        self.port = resource
+    def connect(self, *args, **kwargs):
+        super.connect(*args, **kwargs)
         # Don't send command headers in responses, just the result.
-        self.port.write("chdr off")
+        self.write("chdr off")
 
     def close(self):
         self.port.close()
 
     def reset(self):
-        self.port.write("*rst")
+        self.write("*rst")
         # *opc? should block until the device is ready, but it doesn't, so just sleep.
         time.sleep(4)
         self._time_div = None
 
     def enable_bandwidth_limit(self):
-        self.port.write("BWL C1,ON,C2,ON,C3,ON,C4,ON")
+        self.write("BWL C1,ON,C2,ON,C3,ON,C4,ON")
 
     def set_intensity(self, grid: str, trace: str):
-        self.port.write(f"intensity GRID,{grid},TRACE,{trace}")
+        self.write(f"intensity GRID,{grid},TRACE,{trace}")
 
     def enable_channel(self, channel: str):
-        self.port.write(f"{channel}:trace on")
+        self.write(f"{channel}:trace on")
 
     def disable_channel(self, channel: str):
-        self.port.write(f"{channel}:trace off")
+        self.write(f"{channel}:trace off")
 
     def set_vertical_division(self, channel: str, volts: str):
-        self.port.write(f"{channel}:vdiv {volts}")
+        self.write(f"{channel}:vdiv {volts}")
 
     def set_vertical_offset(self, channel: str, volts: str):
-        self.port.write(f"{channel}:ofst {volts}")
+        self.write(f"{channel}:ofst {volts}")
 
-    def set_time_division(self, value: str):
+    def set_time_division(self, value: str, force: bool = False):
         # Prevent unnecessarily changing the time division, since it can
         # be slow.
-        if self._time_div != value:
-            self.port.write(f"tdiv {value}")
+        if self._time_div != value or force:
+            self.write(f"tdiv {value}")
             self._time_div = value
 
     def enable_cursors(self):
-        self.port.write("cursor_measure manual")
+        self.write("cursor_measure manual")
 
     def set_cursor_type(self, type: str):
-        self.port.write(f"cursor_type {type}")
+        self.write(f"cursor_type {type}")
 
     def set_vertical_cursor(self, trace: str, ref: float, dif: float):
-        self.port.write(f"{trace}:cursor_set VREF,{ref},VDIF,{dif}")
+        self.write(f"{trace}:cursor_set VREF,{ref},VDIF,{dif}")
 
     def get_frequency(self):
-        self.port.write("cymometer?")
-        output = self.port.read_raw().decode("utf-8")
-        return float(output)
+        return float(self.query("cymometer?"))
 
     def get_peak_to_peak(self, trace: str):
-        self.port.write(f"{trace}:parameter_value? PKPK")
         try:
-            return float(self.port.read_raw().decode("utf-8").split(",")[-1])
+            return float(self.query(f"{trace}:parameter_value? PKPK").split(",")[-1])
         except ValueError:
             return 0
 
     def get_max(self, trace: str):
-        self.port.write(f"{trace}:parameter_value? MAX")
         try:
-            return float(self.port.read_raw().decode("utf-8").split(",")[-1])
+            return float(self.query(f"{trace}:parameter_value? MAX").split(",")[-1])
         except ValueError:
             return 0
 
     def set_trigger_level(self, trig_source: str, trig_level: str):
-        self.port.write(f"{trig_source}:trig_level {trig_level}")
+        self.write(f"{trig_source}:trig_level {trig_level}")
 
     def show_measurement(self, trace: str, parameter: str):
-        self.port.write(f"parameter_custom {trace},{parameter}")
+        self.write(f"parameter_custom {trace},{parameter}")
