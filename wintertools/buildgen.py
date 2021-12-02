@@ -96,7 +96,7 @@ class Desktop:
     @classmethod
     def ld_flags(cls, use_cxx=False):
         if use_cxx:
-            return ["-std=gnu17", "-lc++"]
+            return ["-std=gnu17", "-std=gnu++17", "-lc++"]
         else:
             return []
 
