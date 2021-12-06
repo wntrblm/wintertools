@@ -18,6 +18,8 @@ def resource_manager():
 
 
 class Instrument:
+    TIMEOUT = 2000
+
     def __init__(self, resource_manager=None, resource_name=None):
         self.connect(resource_manager, resource_name)
 
@@ -33,7 +35,7 @@ class Instrument:
             )
 
         try:
-            resource = resource_manager.open_resource(self.RESOURCE_NAME)
+            resource = resource_manager.open_resource(resource_name)
         except pyvisa.errors.VisaIOError as exc:
             log.error("Couldn't connect to multimeter", exc=exc)
 
