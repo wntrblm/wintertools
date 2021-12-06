@@ -10,9 +10,12 @@ import tempfile
 import pathlib
 
 import jinja2
+import rich
 import qrcode
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
+
+from wintertools import ff_screenshot
 
 
 def _material_icon(name):
@@ -53,18 +56,21 @@ with importlib.resources.path("wintertools.reportcard", "logo.svg") as src:
 def render_html(report, file=None):
     output = template.render(report=report)
 
+    if file is None:
+        file = f"{report.name.lower()}.html"
+
     if isinstance(file, (str, pathlib.Path)):
         with open(file, "w") as fh:
             fh.write(output)
+            rich.print(f"[green]Report rendered to {file}")
     elif file:
         file.write(output)
 
     return output
 
 
-def render_image(report, file=None):
-    with tempfile.NamedTemporaryFile as html_fh:
+def render_image(report, dest):
+    with tempfile.NamedTemporaryFile("w") as html_fh:
         render_html(report, file=html_fh)
-        print(html_fh.name)
-
-    # TODO: https://github.com/pyppeteer/pyppeteer
+        ff_screenshot.capture(f"file://{html_fh.name}", dest)
+        rich.print(f"[green]Report rendered to {dest}")

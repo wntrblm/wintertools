@@ -2,9 +2,12 @@
 # Published under the standard MIT License.
 # Full text available at: https://opensource.org/licenses/MIT
 
+import colorsys
 from typing import Callable, Sequence, Union
 
 import pydantic
+import rich.table
+import rich.text
 
 from .svg import Drawing
 
@@ -96,7 +99,7 @@ class GridLines(pydantic.BaseModel):
 
         x = self.x_step
 
-        while x < 0.9:
+        while x < 1.0:
             px.push("M", x_axis.ease(x) * w, 0)
             px.push("l", 0, h)
             x += self.x_step
@@ -107,7 +110,7 @@ class GridLines(pydantic.BaseModel):
 
         y = self.y_step
 
-        while y < 1.0:
+        while y <= 1.0:
             py.push("M", 0, y_axis.ease(y) * h)
             py.push("l", w, 0)
             y += self.y_step
@@ -116,7 +119,7 @@ class GridLines(pydantic.BaseModel):
 
 
 class Series(pydantic.BaseModel):
-    data: Sequence[tuple[float, float]]
+    data: Sequence[tuple[float, float]] = []
     stroke: str = "black"
     stroke_width: int = 8
 
@@ -180,8 +183,7 @@ class LineGraph(pydantic.BaseModel):
             # datapoints
             for n, (x, y) in enumerate(series.data):
                 x_offset_factor = self.x_axis.offset_of(x)
-                if x_offset_factor > 1.0:
-                    x_offset_factor = 1.0
+                x_offset_factor = min(1.0, max(0.0, x_offset_factor))
 
                 x_offset = x_offset_factor * w
                 y_offset = h - (self.y_axis.offset_of(y) * h)
@@ -199,3 +201,40 @@ class LineGraph(pydantic.BaseModel):
         g.add(_text(svg, 0, h, self.y_axis.min_label, "axis y-axis range-min"))
 
         return drawing.data_url
+
+    def draw_console(self, series):
+        if isinstance(series, Series):
+            series = [series]
+
+        span = self.y_axis.max - self.y_axis.min
+        center = self.y_axis.min + (span / 2)
+
+        table = rich.table.Table()
+        table.add_column(self.x_axis.label)
+
+        for _ in series:
+            table.add_column(self.y_axis.label)
+
+        for n in range(len(series[0].data)):
+            row = [series[0].data[n][0]]
+
+            for s in series:
+                row.append(s.data[n][1])
+
+            for n, v in enumerate(row):
+                if isinstance(v, float):
+                    if v >= center:
+                        dist = min(abs(v / (self.y_axis.max - center)), 1.0)
+                    if v < center:
+                        dist = min(abs(v / (self.y_axis.min - center)), 1.0)
+
+                    color = ",".join(
+                        [str(int(n * 255)) for n in colorsys.hsv_to_rgb(0.0, dist, 1.0)]
+                    )
+                    row[n] = rich.text.Text(f"{v:0.3f}", style=f"rgb({color})")
+                else:
+                    row[n] = f"{v!r}"
+
+            table.add_row(*row)
+
+        return table

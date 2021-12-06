@@ -3,7 +3,7 @@
 # Full text available at: https://opensource.org/licenses/MIT
 
 from . import graph
-from .graph import LineGraph, Series
+from .graph import Axis, LineGraph, Series, GridLines
 from .render import render_html, render_image
 from .report import (
     Item,
@@ -12,10 +12,13 @@ from .report import (
     PassFailItem,
     Report,
     Section,
+    SubTextItem,
     TextItem,
 )
 
 __all__ = [
+    "Axis",
+    "GridLines",
     "Item",
     "LabelValueItem",
     "LineGraph",
@@ -26,6 +29,7 @@ __all__ = [
     "Report",
     "Section",
     "Series",
+    "SubTextItem",
     "TextItem",
     "graph",
 ]
