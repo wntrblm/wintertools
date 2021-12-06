@@ -18,10 +18,19 @@ WARNING_COLOR = (1.0, 1.0, 0.4)
 ERROR_COLOR = (1.0, 0.4, 0.4)
 SUCCESS_COLOR = (0.5, 1.0, 0.5)
 
-
 _log_file_path = Path("logs", f"{datetime.datetime.now().isoformat()}.log")
-_log_file_path.parent.mkdir(parents=True, exist_ok=True)
-_log_file = _log_file_path.open("w")
+_log_file = None
+
+
+def _init():
+    global _log_file
+
+    if _log_file:
+        return
+
+    _log_file_path.parent.mkdir(parents=True, exist_ok=True)
+    _log_file = _log_file_path.open("w")
+    atexit.register(_finish_up)
 
 
 def _finish_up():
@@ -36,15 +45,13 @@ def _finish_up():
     )
 
 
-atexit.register(_finish_up)
-
-
 def _print_term(color, *args, sep=" ", end="\n", **kwargs):
     args = sep.join(f"{arg}" for arg in args)
     print(tui.rgb(color), args, tui.reset, sep="", end=end, **kwargs)
 
 
 def _print_file(*args, sep=" ", end="\n", **kwargs):
+    _init()
     print(*args, sep=sep, end=end, **kwargs, file=_log_file)
 
 
