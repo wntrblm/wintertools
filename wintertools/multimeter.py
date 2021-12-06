@@ -12,22 +12,45 @@ from . import visa
 
 
 class Multimeter(visa.Instrument):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._setup_for_voltage_reading = False
+
+    def autozero(self):
+        self.write("*RST")
+        self.write(':SENS:FUNC "VOLT:DC"')
+        self.write(":SENS:AZER:ONCE")
+
     def read_voltage(self, average_count=20):
         self.write("*RST")
         self.write(':SENS:FUNC "VOLT:DC"')
         self.write(":SENS:VOLT:RANG 10")
         self.write(":SENS:VOLT:INP AUTO")
-        self.write(":SENS:VOLT:NPLC 1")
+        self.write(":SENS:VOLT:NPLC 2")
         self.write(":SENS:VOLT:AZER ON")
         self.write(":SENS:VOLT:AVER:TCON REP")
         self.write(f":SENS:VOLT:AVER:COUN {average_count}")
         self.write(":SENS:VOLT:AVER ON")
         return self.port.query_ascii_values(":READ?")[0]
 
-    def read_voltage_fast(self):
-        self.write("*RST")
+    def setup_voltage_reading(self):
+        self.autozero()
         self.write(':SENS:FUNC "VOLT:DC"')
         self.write(":SENS:VOLT:RANG 10")
         self.write(":SENS:VOLT:INP AUTO")
+        self.write(":SENS:VOLT:NPLC 1")
         self.write(":SENS:VOLT:AZER ON")
-        return self.port.query_ascii_values(":READ?")[0]
+        self._setup_for_voltage_reading = True
+
+    def read_voltage_fast(self):
+        if not self._setup_for_voltage_reading:
+            self.setup_voltage_reading()
+        self.write(':SENS:FUNC "VOLT:DC"')
+        self.write(":SENS:VOLT:RANG 10")
+        self.write(":SENS:VOLT:INP AUTO")
+        self.write(":SENS:VOLT:NPLC 1")
+        self.write(":SENS:VOLT:AZER ON")
+        values = self.port.query_ascii_values("READ?")
+        if len(values) > 1:
+            print(values)
+        return values[0]
