@@ -8,13 +8,15 @@ from . import config, log
 _resource_manager = None
 
 
-def resource_manager():
+def global_resource_manager():
     global _resource_manager
 
     if _resource_manager is None:
         _resource_manager = pyvisa.ResourceManager(
             config.get("visa.interface", default="@py")
         )
+
+    return _resource_manager
 
 
 class Instrument:
@@ -24,10 +26,9 @@ class Instrument:
         self.connect(resource_manager, resource_name)
 
     def connect(self, resource_manager, resource_name):
-        global _resource_manager
 
         if resource_manager is None:
-            resource_manager = _resource_manager
+            resource_manager = global_resource_manager()
 
         if resource_name is None:
             resource_name = config.get(
