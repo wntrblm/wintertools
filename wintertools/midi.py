@@ -26,7 +26,7 @@ def wait_for_message(port_in, timeout=5):
             return msg
 
         if time.monotonic() > start + timeout:
-            raise IOError(f"Timed out while waiting for MIDI message.")
+            raise IOError("Timed out while waiting for MIDI message.")
         else:
             time.sleep(0.001)
 
@@ -70,6 +70,9 @@ class MIDIDevice:
             self, "MIDI_PORT_OUT_NAME", getattr(self, "MIDI_PORT_NAME", None)
         )
         self.port_out, _ = open_midiport(out_port_name, type_="output")
+
+    def send(self, *msg):
+        return self.port_out.send_message(msg)
 
     def wait_for_message(self):
         return wait_for_message(self.port_in)
