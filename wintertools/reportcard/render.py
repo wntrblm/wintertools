@@ -57,7 +57,7 @@ def render_html(report, file=None):
     output = template.render(report=report)
 
     if file is None:
-        file = f"{report.name.lower()}.html"
+        file = f"{report.name.lower()}-{report.ulid}.html"
 
     if isinstance(file, (str, pathlib.Path)):
         with open(file, "w") as fh:
@@ -69,8 +69,13 @@ def render_html(report, file=None):
     return output
 
 
-def render_image(report, dest):
+def render_image(report, dest=None):
+    if dest is None:
+        dest = f"{report.name.lower()}-{report.ulid}.png"
+
     with tempfile.NamedTemporaryFile("w") as html_fh:
         render_html(report, file=html_fh)
         ff_screenshot.capture(f"file://{html_fh.name}", dest)
         rich.print(f"[green]Report rendered to {dest}")
+
+    return dest
