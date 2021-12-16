@@ -38,9 +38,13 @@ class adjust_value:
         self._interval = interval
 
         if gamepad.connected:
-            print("Use gamepad to adjust - up/down to modify, A to accept.")
+            print(
+                "Use gamepad to adjust - up/down or left/right to modify, A to accept."
+            )
         else:
-            print("Use keyboard to adjust - up/down arrow to change, enter to accept.")
+            print(
+                "Use keyboard to adjust - up/down or left/right arrow to change, enter to accept."
+            )
 
     def _clamp(self, value):
         if self._min:
@@ -61,10 +65,10 @@ class adjust_value:
 
                 if time.monotonic() - last_update > self._interval:
                     last_update = time.monotonic()
-                    if gamepad.UP:
+                    if gamepad.UP or gamepad.RIGHT:
                         self.value = self._clamp(self.value + 1)
                         yield self.value
-                    if gamepad.DOWN:
+                    if gamepad.DOWN or gamepad.LEFT:
                         self.value = self._clamp(self.value - 1)
                         yield self.value
 
@@ -76,11 +80,13 @@ class adjust_value:
 
             else:
                 key = keyboard.read()
-                if key == keyboard.UP:
+                if key in (keyboard.UP, keyboard.RIGHT):
                     self.value = self._clamp(self.value + 1)
                     yield self.value
-                if key == keyboard.DOWN:
+                if key in (keyboard.DOWN, keyboard.LEFT):
                     self.value = self._clamp(self.value - 1)
+                    yield self.value
+                if key == keyboard.SPACE:
                     yield self.value
                 if key == keyboard.ENTER:
                     yield self.value

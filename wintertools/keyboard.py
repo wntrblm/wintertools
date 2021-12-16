@@ -18,6 +18,7 @@ DOWN = readchar.key.DOWN
 LEFT = readchar.key.LEFT
 RIGHT = readchar.key.RIGHT
 ENTER = readchar.key.ENTER
+SPACE = readchar.key.SPACE
 
 
 def read():
