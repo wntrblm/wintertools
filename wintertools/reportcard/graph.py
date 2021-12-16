@@ -39,7 +39,7 @@ class Ease:
 
     @staticmethod
     def quart(x):
-        return x * x * x
+        return x * x * x * x
 
 
 class Axis(pydantic.BaseModel):
@@ -184,9 +184,12 @@ class LineGraph(pydantic.BaseModel):
             for n, (x, y) in enumerate(series.data):
                 x_offset_factor = self.x_axis.offset_of(x)
                 x_offset_factor = min(1.0, max(0.0, x_offset_factor))
-
                 x_offset = x_offset_factor * w
-                y_offset = h - (self.y_axis.offset_of(y) * h)
+
+                y_offset_factor = self.y_axis.offset_of(y)
+                x_offset_factor = min(1.0, max(0.0, y_offset_factor))
+                y_offset = h - (x_offset_factor * h)
+
                 p.push("M" if n == 0 else "L", x_offset, y_offset)
 
             g.add(p)
@@ -206,9 +209,6 @@ class LineGraph(pydantic.BaseModel):
         if isinstance(series, Series):
             series = [series]
 
-        span = self.y_axis.max - self.y_axis.min
-        center = self.y_axis.min + (span / 2)
-
         table = rich.table.Table()
         table.add_column(self.x_axis.label)
 
@@ -222,19 +222,28 @@ class LineGraph(pydantic.BaseModel):
                 row.append(s.data[n][1])
 
             for n, v in enumerate(row):
-                if isinstance(v, float):
-                    if v >= center:
-                        dist = min(abs(v / (self.y_axis.max - center)), 1.0)
-                    if v < center:
-                        dist = min(abs(v / (self.y_axis.min - center)), 1.0)
-
-                    color = ",".join(
-                        [str(int(n * 255)) for n in colorsys.hsv_to_rgb(0.0, dist, 1.0)]
-                    )
-                    row[n] = rich.text.Text(f"{v:0.3f}", style=f"rgb({color})")
+                if n == 0:
+                    row[n] = rich.text.Text(f"{v:0.3f}", style="bold italic")
+                elif isinstance(v, float):
+                    color = _color_for_value(v, self.y_axis.min, self.y_axis.max)
+                    row[n] = rich.text.Text(f"{v:0.3f}", style=color)
                 else:
                     row[n] = f"{v!r}"
 
             table.add_row(*row)
 
         return table
+
+
+def _color_for_value(val, min, max):
+    span = max - min
+    dist = (val - min) / span
+
+    if 0 <= dist <= 1:
+        hue = 0.6 - dist * 0.4
+    else:
+        hue = 0
+
+    rgbstr = ",".join([str(int(n * 255)) for n in colorsys.hsv_to_rgb(hue, 0.6, 1.0)])
+
+    return f"rgb({rgbstr})"
