@@ -3,7 +3,7 @@
 # Full text available at: https://opensource.org/licenses/MIT
 
 import pyvisa
-from . import config, log
+from . import config
 
 _resource_manager = None
 
@@ -38,7 +38,9 @@ class Instrument:
         try:
             resource = resource_manager.open_resource(resource_name)
         except pyvisa.errors.VisaIOError as exc:
-            log.error("Couldn't connect to multimeter", exc=exc)
+            raise RuntimeError(
+                f"Couldn't connect to VISA instrument {self.__class_.__name__} at {resource_name}"
+            ) from exc
 
         resource.timeout = self.TIMEOUT
         self.port = resource
