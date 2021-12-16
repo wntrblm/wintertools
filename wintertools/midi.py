@@ -8,10 +8,14 @@ Utilities for interacting with Winterbloom MIDI devices.
 
 import time
 
+from rich import print
+from rich.live import Live
+from rich.text import Text
+
 import rtmidi
 import rtmidi.midiutil
 
-from wintertools import log, teeth
+from wintertools import teeth
 
 SYSEX_START = 0xF0
 SYSEX_END = 0xF7
@@ -35,15 +39,23 @@ def wait_for_message(port_in, timeout=5):
 
 
 def open_midiport(port, *args, **kwargs):
-    while True:
-        try:
-            return rtmidi.midiutil.open_midiport(
-                port, *args, interactive=False, **kwargs
-            )
-        except (rtmidi.NoDevicesError, rtmidi.InvalidPortError):
-            log.warning(f"Couldn't find MIDI device {port}. Retrying in 1s...")
-            time.sleep(1)
-            continue
+    n = 1
+    with Live(transient=True) as out:
+        while True:
+            try:
+                return rtmidi.midiutil.open_midiport(
+                    port, *args, interactive=False, **kwargs
+                )
+            except (rtmidi.NoDevicesError, rtmidi.InvalidPortError):
+                out.update(
+                    Text(
+                        f"Couldn't find MIDI device {port}, retrying... (attempt {n})",
+                        style="yellow",
+                    )
+                )
+                n += 1
+                time.sleep(1)
+                continue
 
 
 class MIDIDevice:
@@ -58,7 +70,7 @@ class MIDIDevice:
 
     def __init__(self):
         if self._instance:
-            log.warning(f"There is already an instance of {self.__class__}.")
+            print(f"[yellow]There is already an instance of {self.__class__}.[/]")
 
         in_port_name = getattr(
             self, "MIDI_PORT_IN_NAME", getattr(self, "MIDI_PORT_NAME", None)
