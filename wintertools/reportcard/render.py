@@ -2,19 +2,18 @@
 # Published under the standard MIT License.
 # Full text available at: https://opensource.org/licenses/MIT
 
-import io
 import base64
 import importlib.resources
+import io
 import mimetypes
-import tempfile
 import pathlib
+import tempfile
 
 import jinja2
-import rich
 import qrcode
+import rich
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
-
 from wintertools import ff_screenshot
 
 
@@ -57,7 +56,8 @@ def render_html(report, file=None):
     output = template.render(report=report)
 
     if file is None:
-        file = f"{report.name.lower()}-{report.ulid}.html"
+        file = pathlib.Path(f"reports/{report.name.lower()}-{report.ulid}.html")
+        file.parent.mkdir(parents=True, exist_ok=True)
 
     if isinstance(file, (str, pathlib.Path)):
         with open(file, "w") as fh:
@@ -71,7 +71,8 @@ def render_html(report, file=None):
 
 def render_image(report, dest=None):
     if dest is None:
-        dest = f"{report.name.lower()}-{report.ulid}.png"
+        dest = pathlib.Path(f"reports/{report.name.lower()}-{report.ulid}.png")
+        dest.parent.mkdir(parents=True, exist_ok=True)
 
     with tempfile.NamedTemporaryFile("w") as html_fh:
         render_html(report, file=html_fh)
