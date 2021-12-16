@@ -78,13 +78,15 @@ class Colors:
 
 
 _stdout_stack = []
+_updateable_stack = []
 
 
 class Updateable:
-    def __init__(self, clear_all=True):
+    def __init__(self, clear_all=True, persist=True):
         self._buf = io.StringIO()
         self._line_count = 0
         self._clear_all = clear_all
+        self._persist = persist
 
     def write(self, text):
         self._buf.write(text)
@@ -92,14 +94,19 @@ class Updateable:
     def reset(self):
         self._line_count = 0
 
+    def _erase(self, line_count):
+        if line_count == 0:
+            return
+
+        clear_lines = Escape.CURSOR_PREVIOUS_LINE_NUM.format(count=line_count)
+        if self._clear_all:
+            clear_lines += Escape.ERASE_AFTER_CURSOR
+        clear_lines += "\r"
+        sys.__stdout__.write(clear_lines)
+
     def update(self):
-        if self._line_count > 0:
-            clear_lines = Escape.CURSOR_PREVIOUS_LINE_NUM.format(count=self._line_count)
-            if self._clear_all:
-                clear_lines += Escape.ERASE_AFTER_CURSOR
-            clear_lines += "\r"
-            sys.__stdout__.write(clear_lines)
-            self._line_count = 0
+        self._erase(self._line_count)
+        self._line_count = 0
 
         output = self._buf.getvalue()
         sys.__stdout__.write(output)
@@ -113,18 +120,29 @@ class Updateable:
             _stdout_stack.append(sys.stdout)
             sys.stdout = self._buf
 
+        if _updateable_stack:
+            _updateable_stack[-1].update()
+        _updateable_stack.append(self)
+
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        sys.stdout.write(Escape.SHOW_CURSOR)
+        sys.__stdout__.write(Escape.SHOW_CURSOR)
 
-        output = self._buf.getvalue()
-        sys.__stdout__.write(output)
-        sys.__stdout__.flush()
+        if self._persist:
+            output = self._buf.getvalue()
+            sys.__stdout__.write(output)
+            sys.__stdout__.flush()
+        else:
+            self._erase(self._line_count)
+            self._line_count = 0
+
         self._buf.truncate(0)
 
         if sys.stdout == self._buf:
             sys.stdout = _stdout_stack.pop()
+
+        _updateable_stack.pop()
 
     def flush(self):
         sys.__stdout__.flush()
