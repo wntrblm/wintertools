@@ -14,12 +14,12 @@ from . import visa
 
 
 class Oscilloscope(visa.Instrument):
-    def __init__(self, resource_manager=None, resource_name=None):
-        super.__init__(self, resource_manager, resource_name)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._time_div = None
 
     def connect(self, *args, **kwargs):
-        super.connect(*args, **kwargs)
+        super().connect(*args, **kwargs)
         # Don't send command headers in responses, just the result.
         self.write("chdr off")
 
@@ -56,6 +56,20 @@ class Oscilloscope(visa.Instrument):
         if self._time_div != value or force:
             self.write(f"tdiv {value}")
             self._time_div = value
+
+    def set_time_division_from_frequency(self, frequency: float, force: bool = False):
+        if frequency > 1200:
+            self.set_time_division("100us", force=force)
+        elif frequency > 700:
+            self.set_time_division("200us", force=force)
+        elif frequency > 180:
+            self.set_time_division("500us", force=force)
+        elif frequency > 90:
+            self.set_time_division("1ms", force=force)
+        elif frequency > 46:
+            self.set_time_division("2ms", force=force)
+        else:
+            self.set_time_division("5ms", force=force)
 
     def enable_cursors(self):
         self.write("cursor_measure manual")
