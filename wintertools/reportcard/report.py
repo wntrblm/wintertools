@@ -5,14 +5,14 @@
 import datetime
 import pathlib
 import pickle
-from typing import Union, Sequence
+from typing import Sequence, Union
 
 import pydantic
 import rich
-import rich.text
 import rich.console
 import rich.padding
 import rich.panel
+import rich.text
 import ulid
 
 from . import graph
@@ -49,7 +49,10 @@ class LabelValueItem(Item):
     value: str
 
     def __rich__(self):
-        return rich.text.Text(f"{self.label}: [bold]{self.value}[/bold]")
+        return rich.console.Group(
+            rich.text.Text(f"{self.label}: "),
+            rich.text.Text(f"{self.value}", style="bold"),
+        )
 
 
 class PassFailItem(Item):
@@ -95,9 +98,10 @@ class Section(pydantic.BaseModel):
     def __rich__(self):
         return rich.console.Group(
             rich.padding.Padding(
-                rich.text.Text(self.name, style="bold underline"), (1, 0),
+                rich.text.Text(self.name, style="bold underline"),
+                (1, 0),
             ),
-            *self.items
+            *self.items,
         )
 
 
@@ -118,7 +122,8 @@ class Report(pydantic.BaseModel):
 
     def save(self, file=None):
         if file is None:
-            file = f"{self.name.lower()}-{self.ulid}.pickle"
+            file = pathlib.Path(f"reports/{self.name.lower()}-{self.ulid}.pickle")
+            file.parent.mkdir(parents=True, exist_ok=True)
 
         if isinstance(file, (str, pathlib.Path)):
             with open(file, "wb") as fh:
@@ -140,8 +145,6 @@ class Report(pydantic.BaseModel):
         ]
 
         if not self.succeeded:
-            renderables.append(
-                rich.panel.Panel.fit("[bold flashing red]FAILED TEST")
-            )
+            renderables.append(rich.panel.Panel.fit("[bold flashing red]FAILED TEST"))
 
         return rich.console.Group(*renderables)
