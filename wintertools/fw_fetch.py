@@ -8,9 +8,10 @@ Helpers that can fetch the latest CircuitPython and uf2 bootloader releases.
 
 import xml.dom.minidom
 
+from rich import print
 import requests
 
-from wintertools import fs, log
+from wintertools import fs
 
 BOOTLOADER_RELEASES_URL = (
     "https://api.github.com/repos/adafruit/uf2-samdx1/releases/latest"
@@ -59,11 +60,11 @@ def find_latest_circuitpython(device_name):
 
 def latest_bootloader(device_name):
     bootloader_url = find_latest_bootloader(device_name)
-    log.info(f"Downloading bootloader {bootloader_url}...")
+    print(f"Downloading bootloader {bootloader_url}...")
     return fs.download_file_to_cache(bootloader_url, f"bootloader.{device_name}.bin")
 
 
 def latest_circuitpython(device_name):
     cp_url = find_latest_circuitpython(device_name)
-    log.info(f"Downloading CircuitPython {cp_url}...")
+    print(f"Downloading CircuitPython {cp_url}...")
     return fs.download_file_to_cache(cp_url, f"circuitpython.{device_name}.uf2")
