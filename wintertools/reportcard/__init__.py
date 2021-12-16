@@ -3,7 +3,7 @@
 # Full text available at: https://opensource.org/licenses/MIT
 
 from . import graph
-from .graph import Axis, LineGraph, Series, GridLines
+from .graph import Axis, Ease, GridLines, LineGraph, Series
 from .render import render_html, render_image
 from .report import (
     Item,
@@ -18,6 +18,7 @@ from .report import (
 
 __all__ = [
     "Axis",
+    "Ease",
     "GridLines",
     "Item",
     "LabelValueItem",
