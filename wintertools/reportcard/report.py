@@ -12,6 +12,7 @@ from typing import Sequence, Union
 
 import pydantic
 import rich
+import rich.align
 import rich.console
 import rich.padding
 import rich.panel
@@ -19,6 +20,8 @@ import rich.text
 import ulid
 
 from . import graph
+
+_MAX_CONSOLE_WIDTH = 60
 
 
 def _json_encoder(val, default):
@@ -125,7 +128,7 @@ class LabelValueItem(Item):
 
     def __rich__(self):
         return rich.console.Group(
-            rich.text.Text(f"{self.label}: "),
+            rich.text.Text(f"{self.label}: ", style="italic", end=""),
             rich.text.Text(f"{self.value}", style="bold"),
         )
 
@@ -145,7 +148,10 @@ class PassFailItem(Item):
     def __rich__(self):
         style = "green" if self.value else "bold red"
         character = "✓" if self.value else "❌"
-        return rich.text.Text(f"{self.label}: {character}", style=style)
+        return rich.console.Group(
+            rich.text.Text(f"{self.label}: ", style="italic", end=""),
+            rich.text.Text(character, style=style),
+        )
 
 
 class ImageItem(Item):
@@ -173,7 +179,7 @@ class Section(_BaseModel):
     def __rich__(self):
         return rich.console.Group(
             rich.padding.Padding(
-                rich.text.Text(self.name, style="bold underline"),
+                rich.text.Text(self.name, style="cyan bold underline"),
                 (1, 0),
             ),
             *self.items,
@@ -231,4 +237,8 @@ class Report(_BaseModel):
         if not self.succeeded:
             renderables.append(rich.panel.Panel.fit("[bold flashing red]FAILED TEST"))
 
-        return rich.console.Group(*renderables)
+        return rich.align.Align.center(
+            rich.panel.Panel.fit(
+                rich.console.Group(*renderables, fit=True), width=_MAX_CONSOLE_WIDTH
+            )
+        )

@@ -4,6 +4,7 @@
 
 import itertools
 import textwrap
+from pydantic import parse
 
 import rich
 import rich.padding
@@ -11,6 +12,9 @@ import rich.console
 import rich.text
 import rich.panel
 import rich.rule
+
+
+NON_SEPERATED_NEWLINE = object()
 
 
 class Printer:
@@ -29,10 +33,9 @@ class Printer:
             else:
                 yield x
                 return
-        else:
-            if self._in_list:
-                yield "\n"
-                self._in_list = False
+        elif self._in_list:
+            self._in_list = False
+            yield NON_SEPERATED_NEWLINE
 
         if not isinstance(x, str):
             pass
@@ -74,11 +77,26 @@ class Printer:
             x = "[cyan]»[italic]" + x[1:] + "[/italic]"
             x = rich.padding.Padding(x, pad=(1, 0))
 
+        elif x.startswith("✓ "):
+            x = f"[green]{x}[/]"
+
         yield x
 
-    def __call__(self, *args):
-        args = itertools.chain(*((self._parse(x) for x in args)))
-        return rich.print(*args)
+    def __call__(self, *args, **kwargs):
+        sep = kwargs.pop("sep", " ")
+        parsed = list(itertools.chain(*((self._parse(x) for x in args))))
+        args = []
+
+        for n, item in enumerate(parsed):
+            if item is NON_SEPERATED_NEWLINE:
+                args.append("\n")
+            else:
+                if n == len(parsed) - 1:
+                    args.append(item)
+                else:
+                    args.extend([item, sep])
+
+        rich.print(*args, sep="", **kwargs)
 
     def success(self):
         rich.print(
@@ -111,7 +129,9 @@ if __name__ == "__main__":
     print("Just some normal text")
     print("* This is a list")
     print("* with two items")
+    print("✓ something went well")
     print("- and another list using -")
+    print("- weeeee")
     print("Some more normal text")
     print("> this is a blockquote\nwith multiple\nlines")
     print.success()

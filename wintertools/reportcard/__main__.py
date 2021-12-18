@@ -8,6 +8,7 @@ import pickle
 
 import rich
 
+from wintertools.reportcard.report import Report
 from wintertools.reportcard import render
 
 if __name__ == "__main__":
@@ -19,7 +20,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with args.source.open("rb") as fh:
-        report = pickle.load(fh)
+        report = Report.load(fh)
 
     rich.print(report)
 

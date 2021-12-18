@@ -6,6 +6,8 @@ import colorsys
 from typing import Callable, Sequence, Union
 
 import pydantic
+import rich.align
+import rich.box
 import rich.table
 import rich.text
 
@@ -209,7 +211,11 @@ class LineGraph(pydantic.BaseModel):
         if isinstance(series, Series):
             series = [series]
 
-        table = rich.table.Table()
+        table = rich.table.Table(
+            expand=False,
+            box=rich.box.MINIMAL,
+            border_style="rgb(100,100,100)",
+        )
         table.add_column(self.x_axis.label)
 
         for _ in series:
@@ -232,7 +238,7 @@ class LineGraph(pydantic.BaseModel):
 
             table.add_row(*row)
 
-        return table
+        return rich.align.Align.center(table)
 
 
 def _color_for_value(val, min, max):
