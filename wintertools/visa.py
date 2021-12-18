@@ -3,6 +3,7 @@
 # Full text available at: https://opensource.org/licenses/MIT
 
 import pyvisa
+
 from . import config
 
 _resource_manager = None

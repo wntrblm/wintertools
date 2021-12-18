@@ -8,8 +8,8 @@ Helpers that can fetch the latest CircuitPython and uf2 bootloader releases.
 
 import xml.dom.minidom
 
-from rich import print
 import requests
+from rich import print
 
 from wintertools import fs
 

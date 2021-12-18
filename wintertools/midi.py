@@ -8,12 +8,11 @@ Utilities for interacting with Winterbloom MIDI devices.
 
 import time
 
+import rtmidi
+import rtmidi.midiutil
 from rich import print
 from rich.live import Live
 from rich.text import Text
-
-import rtmidi
-import rtmidi.midiutil
 
 from wintertools import teeth
 

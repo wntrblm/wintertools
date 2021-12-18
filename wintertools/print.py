@@ -6,12 +6,11 @@ import itertools
 import textwrap
 
 import rich
-import rich.padding
 import rich.console
-import rich.text
+import rich.padding
 import rich.panel
 import rich.rule
-
+import rich.text
 
 NON_SEPERATED_NEWLINE = object()
 

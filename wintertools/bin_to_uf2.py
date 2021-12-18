@@ -7,9 +7,9 @@
 Converts bin to uf2 files.
 """
 
-import struct
 import argparse
 import pathlib
+import struct
 
 UF2_MAGIC_START0 = 0x0A324655  # "UF2\n"
 UF2_MAGIC_START1 = 0x9E5D5157  # Randomly selected

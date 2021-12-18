@@ -116,4 +116,5 @@ class Gamepad:
     def __str__(self):
         return f"<Gamepad up: {self.UP}, down: {self.DOWN}, left: {self.LEFT}, right: {self.RIGHT}, a: {self.A} b: {self.B} c: {self.C} x: {self.X} y: {self.Y}  z: {self.Z} l: {self.L} r: {self.R} start: {self.START}>"
 
+
 gamepad = Gamepad()

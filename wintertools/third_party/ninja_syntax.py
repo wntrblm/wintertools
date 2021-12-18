@@ -209,12 +209,14 @@ def escape(string):
     return string.replace("$", "$$")
 
 
-def expand(string, vars, local_vars={}):
+def expand(string, vars, local_vars=None):
     """Expand a string containing $vars as Ninja would.
 
     Note: doesn't handle the full Ninja variable syntax, but it's enough
     to make configure.py's use of it work.
     """
+    if local_vars is None:
+        local_vars = {}
 
     def exp(m):
         var = m.group(1)

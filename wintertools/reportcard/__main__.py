@@ -7,8 +7,8 @@ import pathlib
 
 import rich
 
-from wintertools.reportcard.report import Report
 from wintertools.reportcard import render
+from wintertools.reportcard.report import Report
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

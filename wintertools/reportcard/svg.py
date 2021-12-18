@@ -3,8 +3,8 @@
 # Full text available at: https://opensource.org/licenses/MIT
 
 import base64
-import io
 import importlib.resources
+import io
 
 import svgwrite
 

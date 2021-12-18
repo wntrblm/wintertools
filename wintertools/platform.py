@@ -9,7 +9,6 @@ factory setup stuff, so this just detects macOS.
 
 import platform
 
-
 PLATFORM = platform.system()
 
 if PLATFORM == "Darwin":

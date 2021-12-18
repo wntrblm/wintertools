@@ -24,12 +24,12 @@ PLUS_COLOR = (1.0, 1.0, 0.5)
 MINUS_COLOR = (127, 255, 191)
 
 
-def sizeof_fmt(num, suffix='B'):
-    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+def sizeof_fmt(num, suffix="B"):
+    for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
         if abs(num) < 1024.0:
             return "%3.2f %s%s" % (num, unit, suffix)
         num /= 1024.0
-    return "%.2f %s%s" % (num, 'Yi', suffix)
+    return "%.2f %s%s" % (num, "Yi", suffix)
 
 
 def _color_for_percent(percentage):
@@ -130,7 +130,11 @@ def main():
     parser.add_argument("--bootloader-size", default=None)
     parser.add_argument("--no-last", type=bool, default=False)
     parser.add_argument("--size-prog", type=pathlib.Path, default="arm-none-eabi-size")
-    parser.add_argument("--human-readable", help="print sizes in human-readable format", action="store_true")
+    parser.add_argument(
+        "--human-readable",
+        help="print sizes in human-readable format",
+        action="store_true",
+    )
 
     args = parser.parse_args()
 

@@ -14,6 +14,7 @@ import qrcode
 import rich
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
+
 from wintertools import ff_screenshot
 
 

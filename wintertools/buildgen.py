@@ -250,7 +250,7 @@ def expand_srcs(srcs: list) -> list:
 
 def includes_from_srcs(srcs) -> list:
     """Generates a list of include directories for the given set of source Paths"""
-    return list(set((pathlib.Path(path).parent for path in srcs)))
+    return list({pathlib.Path(path).parent for path in srcs})
 
 
 def format_includes(includes: list) -> str:

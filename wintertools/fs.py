@@ -6,13 +6,13 @@
 Tools for working with the filesystem, especially copying files and other nonsense like that.
 """
 
+import io
 import os.path
 import pathlib
+import shutil
 import subprocess
 import time
 import zipfile
-import io
-import shutil
 
 import requests
 
