@@ -234,11 +234,35 @@ class Report(_BaseModel):
             *self.sections,
         ]
 
-        if not self.succeeded:
-            renderables.append(rich.panel.Panel.fit("[bold flashing red]FAILED TEST"))
+        if self.succeeded:
+            renderables.append(
+                rich.align.Align.center(
+                    rich.padding.Padding(
+                        "SUCCEEDED",
+                        pad=(1, 5),
+                        style="bold black on green",
+                        expand=True,
+                    )
+                )
+            )
+        else:
+            renderables.append(
+                rich.align.Align.center(
+                    rich.padding.Padding(
+                        "FAILED",
+                        pad=(1, 5),
+                        style="bold white on red",
+                        expand=True,
+                    )
+                )
+            )
 
         return rich.align.Align.center(
             rich.panel.Panel.fit(
-                rich.console.Group(*renderables, fit=True), width=_MAX_CONSOLE_WIDTH
+                rich.console.Group(
+                    *renderables,
+                    fit=True,
+                ),
+                width=_MAX_CONSOLE_WIDTH,
             )
         )
