@@ -6,27 +6,21 @@
 
 import time
 
-from wintertools import keyboard, tui
+from wintertools import keyboard
 from wintertools.gamepad import gamepad
+from wintertools.print import print
 
 
 def continue_when_ready():
     if gamepad.connected:
-        print(
-            tui.bold,
-            tui.rgb(255, 190, 240),
-            ">> Press A on gamepad when ready.",
-            tui.reset,
-        )
+        print("?? Press A on gamepad when ready.")
         while True:
             gamepad.update()
             if gamepad.A.pressed:
                 break
 
     else:
-        print(
-            tui.bold, tui.rgb(255, 190, 240), ">> Press enter to continue.", tui.reset
-        )
+        print("?? Press enter to continue.")
         input()
 
 

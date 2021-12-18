@@ -70,6 +70,12 @@ class Printer:
                 pad=(1, 0),
             )
 
+        elif x.startswith("?? "):
+            x = rich.padding.Padding(
+                x.replace("?? ", "[bold purple blink] ☛ [/] [bold purple]", 1),
+                pad=(1, 0),
+            )
+
         elif x.startswith("> "):
             x = textwrap.indent(x.replace("> ", "", 1), "   ")
             x = "[cyan]»[italic]" + x[1:] + "[/italic]"
@@ -125,6 +131,8 @@ if __name__ == "__main__":
     print("Some more regular text")
     print("!! This is an important notice")
     print("Just some normal text")
+    print("?? This is waiting on input")
+    print("Another normal text.")
     print("* This is a list")
     print("* with two items")
     print("✓ something went well")
