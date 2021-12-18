@@ -4,7 +4,6 @@
 
 import argparse
 import pathlib
-import pickle
 
 import rich
 

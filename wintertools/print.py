@@ -4,7 +4,6 @@
 
 import itertools
 import textwrap
-from pydantic import parse
 
 import rich
 import rich.padding
