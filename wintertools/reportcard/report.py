@@ -3,8 +3,12 @@
 # Full text available at: https://opensource.org/licenses/MIT
 
 import datetime
+import inspect
+import json
 import pathlib
 import pickle
+import textwrap
+import types
 from typing import Sequence, Union
 
 import pydantic
@@ -18,7 +22,79 @@ import ulid
 from . import graph
 
 
-class Item(pydantic.BaseModel):
+def _json_encoder(val, default):
+    if isinstance(val, datetime.datetime):
+        return dict(__datetime__=True, value=val.isoformat())
+    if isinstance(val, pydantic.BaseModel):
+        return val.dict()
+    if inspect.isfunction(val):
+        return dict(
+            __function__=True,
+            name=val.__name__,
+            source=textwrap.dedent(str(inspect.getsource(val))),
+        )
+
+    return default(val)
+    # raise ValueError(f"{val!r} ({type(val)!r}) is not json encodeable.")
+
+
+def _json_decoder(val):
+    if "__datetime__" in val:
+        return datetime.datetime.fromisoformat(val["value"])
+    if "__function__" in val:
+        module = types.ModuleType("__dynamic")
+        compiled = compile(val["source"], "", "exec")
+        exec(compiled, module.__dict__)
+        return module.__dict__[val["name"]]
+    if "__class__" in val:
+        type_ = val["__class__"]
+        if type_ == "TextItem":
+            return TextItem(**val)
+        if type_ == "SubTextItem":
+            return SubTextItem(**val)
+        if type_ == "LabelValueItem":
+            return LabelValueItem(**val)
+        if type_ == "PassFailItem":
+            return PassFailItem(**val)
+        if type_ == "ImageItem":
+            return ImageItem(**val)
+        if type_ == "LineGraphItem":
+            return LineGraphItem(**val)
+
+    return val
+
+
+def _json_dumps(val, *, default):
+    return json.dumps(val, default=lambda v: _json_encoder(v, default), indent=2)
+
+
+def _json_loads(val):
+    return json.loads(val, object_hook=_json_decoder)
+
+
+class _BaseModel(pydantic.BaseModel):
+    """Extended to return the class name when serializing"""
+
+    class Config:
+        json_loads = _json_loads
+        json_dumps = _json_dumps
+
+    def _iter(
+        self,
+        to_dict: bool = False,
+        by_alias: bool = False,
+        include=None,
+        exclude=None,
+        exclude_unset: bool = False,
+        exclude_defaults: bool = False,
+        exclude_none: bool = False,
+    ):
+        yield "__class__", self.__class__.__name__
+        for k, v in super()._iter():
+            yield k, v
+
+
+class Item(_BaseModel):
     type: str = "unknown"
     class_: str = ""
 
@@ -91,7 +167,7 @@ class LineGraphItem(Item):
         return self.graph.draw_console(series=self.series)
 
 
-class Section(pydantic.BaseModel):
+class Section(_BaseModel):
     name: str
     items: list[Item] = []
 
@@ -105,7 +181,7 @@ class Section(pydantic.BaseModel):
         )
 
 
-class Report(pydantic.BaseModel):
+class Report(_BaseModel):
     name: str
     ulid: str = pydantic.Field(default_factory=lambda: str(ulid.ULID()))
     date: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
@@ -122,15 +198,24 @@ class Report(pydantic.BaseModel):
 
     def save(self, file=None):
         if file is None:
-            file = pathlib.Path(f"reports/{self.name.lower()}-{self.ulid}.pickle")
+            file = pathlib.Path(f"reports/{self.name.lower()}-{self.ulid}.json")
             file.parent.mkdir(parents=True, exist_ok=True)
 
         if isinstance(file, (str, pathlib.Path)):
-            with open(file, "wb") as fh:
-                pickle.dump(self, fh)
+            with open(file, "w") as fh:
+                fh.write(self.json())
             rich.print(f"[green]Report saved to {file}")
+            return pathlib.Path(file)
         elif file:
-            pickle.dump(self, fh)
+            file.write(self.json())
+
+    @classmethod
+    def load(self, file):
+        if isinstance(file, (str, pathlib.Path)):
+            with open(file, "r") as fh:
+                return self.parse_raw(fh.read())
+        elif file:
+            return self.parse_raw(file.read())
 
     def __rich__(self):
         name_color = "green" if self.succeeded else "red"
