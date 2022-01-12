@@ -15,11 +15,21 @@ else:
     _FF_PATH = "firefox"
 
 
-def capture(url, dst):
+def capture(url, dst, width=1000):
     # Use a temporary profile, works around
     with tempfile.TemporaryDirectory() as profile:
         subprocess.run(
-            [_FF_PATH, "-headless", "-screenshot", dst, "-profile", profile, url],
+            [
+                _FF_PATH,
+                "--headless",
+                "--screenshot",
+                dst,
+                "--window-size",
+                f"{width}",
+                "--profile",
+                profile,
+                url,
+            ],
             capture_output=False,
         )
 
