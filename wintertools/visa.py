@@ -40,7 +40,7 @@ class Instrument:
             resource = resource_manager.open_resource(resource_name)
         except pyvisa.errors.VisaIOError as exc:
             raise RuntimeError(
-                f"Couldn't connect to VISA instrument {self.__class_.__name__} at {resource_name}"
+                f"Couldn't connect to VISA instrument {self.__class__.__name__} at {resource_name}"
             ) from exc
 
         resource.timeout = self.TIMEOUT
