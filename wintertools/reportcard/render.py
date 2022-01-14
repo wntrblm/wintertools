@@ -16,6 +16,7 @@ from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
 
 from wintertools import ff_screenshot
+from wintertools.print import print
 
 
 def _material_icon(name):
@@ -71,6 +72,7 @@ def render_html(report, file=None):
 
 
 def render_image(report, dest=None):
+    print("Rendering report to image, this might take a second...")
     if dest is None:
         dest = pathlib.Path(f"reports/{report.name.lower()}-{report.ulid}.png")
         dest.parent.mkdir(parents=True, exist_ok=True)

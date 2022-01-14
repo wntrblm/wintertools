@@ -257,12 +257,10 @@ class Report(_BaseModel):
                 )
             )
 
-        return rich.align.Align.center(
-            rich.panel.Panel.fit(
-                rich.console.Group(
-                    *renderables,
-                    fit=True,
-                ),
-                width=_MAX_CONSOLE_WIDTH,
-            )
+        return rich.panel.Panel.fit(
+            rich.console.Group(
+                *renderables,
+                fit=True,
+            ),
+            width=_MAX_CONSOLE_WIDTH,
         )
