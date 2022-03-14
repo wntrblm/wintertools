@@ -11,7 +11,9 @@ classifiers = ["License :: OSI Approved :: MIT License"]
 requires = [
     "requests >= 2.25.0",
     "pyserial >= 3.5",
+    "python-rtmidi >= 1.4.9",
     "pyvisa >= 1.11.0",
+    "rich >= 12.0.0",
     "readchar >= 2.0.1",
     "structy_generator",
     "structy",
