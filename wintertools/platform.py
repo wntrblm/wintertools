@@ -15,3 +15,8 @@ if PLATFORM == "Darwin":
     MACOS = True
 else:
     MACOS = False
+
+if PLATFORM == "Linux":
+    LINUX = True
+else:
+    LINUX = False
