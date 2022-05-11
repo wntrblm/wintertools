@@ -7,6 +7,7 @@ Tools for working with the filesystem, especially copying files and other nonsen
 """
 
 import io
+import getpass
 import os.path
 import pathlib
 import shutil
@@ -28,9 +29,18 @@ def _find_drive_by_name_macos(name):
     raise RuntimeError(f"No drive {name} found, expected at {drive}.")
 
 
+def _find_drive_by_name_linux(name):
+    drive = os.path.join(f"/media/{getpass.getuser()}/{name}")
+    if os.path.exists(drive):
+        return drive
+    raise RuntimeError(f"No drive {name} found, expected at {drive}.")
+
+
 def find_drive_by_name(name):
     if wintertools.platform.MACOS:
         return _find_drive_by_name_macos(name)
+    elif wintertools.platform.LINUX:
+        return _find_drive_by_name_linux(name)
     else:
         raise EnvironmentError("Idk how to find drives on this platform.")
 
