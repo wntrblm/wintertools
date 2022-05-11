@@ -4,6 +4,8 @@
 
 """A simple interface to Gamepads used by us during setup."""
 
+import atexit
+
 import hid
 
 
@@ -82,6 +84,14 @@ class Gamepad:
         self.R = Button()
         self.START = Button()
 
+    def __del__(self):
+        self.close()
+
+    def close(self):
+        if self.connected:
+            self._device.close()
+            self._device = None
+
     @property
     def connected(self):
         return self._device is not None
@@ -118,3 +128,5 @@ class Gamepad:
 
 
 gamepad = Gamepad()
+
+atexit.register(lambda: gamepad.close())
