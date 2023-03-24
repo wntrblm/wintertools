@@ -80,20 +80,23 @@ class Oscilloscope(visa.Instrument):
     def set_vertical_cursor(self, trace: str, ref: float, dif: float):
         self.write(f"{trace}:cursor_set VREF,{ref},VDIF,{dif}")
 
-    def get_frequency(self):
+    def get_cymometer(self):
         return float(self.query("cymometer?"))
 
-    def get_peak_to_peak(self, trace: str):
+    def get_parameter_value(self, trace: str, param: str):
         try:
-            return float(self.query(f"{trace}:parameter_value? PKPK").split(",")[-1])
+            return float(self.query(f"{trace}:parameter_value? {param}").split(",")[-1])
         except ValueError:
             return 0
 
+    def get_peak_to_peak(self, trace: str):
+        return self.get_parameter_value(trace, "PKPK")
+
     def get_max(self, trace: str):
-        try:
-            return float(self.query(f"{trace}:parameter_value? MAX").split(",")[-1])
-        except ValueError:
-            return 0
+        return self.get_parameter_value(trace, "MAX")
+
+    def get_freq(self, trace: str):
+        return self.get_parameter_value(trace, "FREQ")
 
     def set_trigger_level(self, trig_source: str, trig_level: str):
         self.write(f"{trig_source}:trig_level {trig_level}")
