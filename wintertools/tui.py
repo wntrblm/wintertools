@@ -10,6 +10,23 @@ import math
 import shutil
 import sys
 
+from wcwidth import wcswidth
+
+
+def pad(spec, string):
+    justify, count = spec[0], int(spec[1:])
+
+    width = wcswidth(string) if string else 0
+    spaces = " " * max(0, count - width)
+
+    if justify == "<":
+        return f"{string}{spaces}"
+    if justify == ">":
+        return f"{spaces}{string}"
+    if justify == "^":
+        left, right = spaces[: len(spaces) // 2], spaces[len(spaces) // 2 :]
+        return f"{left}{string}{right}"
+
 
 class Escape:
     CSI = "\u001b["
@@ -217,9 +234,9 @@ class Columns:
                 file.write(Colors.rgb(v))
                 continue
 
-            c = self._columns[n]
-            formatter = f"{{: {c}}}"
-            file.write(formatter.format(str(v)))
+            spec = self._columns[n]
+            padded = pad(spec, f"{v}")
+            file.write(padded)
 
             n += 1
 
