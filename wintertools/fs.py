@@ -6,6 +6,7 @@
 Tools for working with the filesystem, especially copying files and other nonsense like that.
 """
 
+from fnmatch import fnmatch
 import io
 import getpass
 import os.path
@@ -160,6 +161,7 @@ def download_file_to_cache(url, name):
     response = requests.get(url)
 
     if zip_path:
+        print(f"unzipping {zip_path} to {dst_path}")
         unzip_file(response.content, zip_path, dst_path)
     else:
         with open(dst_path, "wb") as fh:
@@ -177,10 +179,18 @@ def unzip_file(zip_content, zip_path, dst_path):
     zip_data = io.BytesIO(zip_content)
 
     with zipfile.ZipFile(zip_data, "r") as zipfh:
-        file_data = zipfh.read(zip_path)
+        for zname in zipfh.namelist():
+            if not fnmatch(zname, zip_path):
+                continue
 
-    with open(dst_path, "wb") as fh:
-        fh.write(file_data)
+            if dst_path.endswith("/"):
+                dst = pathlib.Path(dst_path) / pathlib.Path(zname).name
+                dst.parent.mkdir(exist_ok=True)
+            else:
+                dst = dst_path
+
+            with open(dst, "wb") as fh:
+                fh.write(zipfh.read(zname))
 
 
 def removeprefix(self: str, prefix: str) -> str:
