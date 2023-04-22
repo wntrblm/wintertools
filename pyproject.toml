@@ -17,4 +17,5 @@ requires = [
     "readchar >= 2.0.1",
     "structy_generator",
     "structy",
+    "wcwidth",
 ]
