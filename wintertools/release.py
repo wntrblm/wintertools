@@ -75,7 +75,7 @@ def _git_info() -> dict:
     # Generate a new tag name
     now = datetime.datetime.now()
 
-    info["tag"] = now.strftime(f"%Y.%m.{now.day}")
+    info["tag"] = f"{now.year}.{now.month}.{now.day}"
     info["name"] = datetime.datetime.now().strftime(
         f"%B {now.day}{_day_ordinal(now.day)}, %Y"
     )
