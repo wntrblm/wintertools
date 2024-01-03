@@ -15,7 +15,7 @@ import rich
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
 
-from wintertools import ff_screenshot
+from wintertools import puppeteer_screenshot
 from wintertools.print import print
 
 
@@ -77,9 +77,9 @@ def render_image(report, dest=None):
         dest = pathlib.Path(f"reports/{report.name.lower()}-{report.ulid}.png")
         dest.parent.mkdir(parents=True, exist_ok=True)
 
-    with tempfile.NamedTemporaryFile("w") as html_fh:
+    with tempfile.NamedTemporaryFile("w", suffix=".html") as html_fh:
         render_html(report, file=html_fh)
-        ff_screenshot.capture(f"file://{html_fh.name}", dest)
+        puppeteer_screenshot.capture(f"file://{html_fh.name}", dest)
         rich.print(f"[green]Report rendered to {dest}")
 
     return dest
