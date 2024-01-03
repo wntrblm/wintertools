@@ -7,21 +7,12 @@
 import time
 
 from wintertools import keyboard
-from wintertools.gamepad import gamepad
 from wintertools.print import print
 
 
 def continue_when_ready():
-    if gamepad.connected:
-        print("?? Press A on gamepad when ready.")
-        while True:
-            gamepad.update()
-            if gamepad.A.pressed:
-                break
-
-    else:
-        print("?? Press enter to continue.")
-        input()
+    print("?? Press enter to continue.")
+    input()
 
 
 class adjust_value:
@@ -31,14 +22,7 @@ class adjust_value:
         self._max = max
         self._interval = interval
 
-        if gamepad.connected:
-            print(
-                "Use gamepad to adjust - up/down or left/right to modify, A to accept."
-            )
-        else:
-            print(
-                "Use keyboard to adjust - up/down or left/right arrow to change, enter to accept."
-            )
+        print("Use keyboard to adjust - up/down or left/right arrow to change, enter to accept.")
 
     def _clamp(self, value):
         if self._min:
@@ -54,34 +38,15 @@ class adjust_value:
         yield self.value
 
         while True:
-            if gamepad.connected:
-                gamepad.update()
-
-                if time.monotonic() - last_update > self._interval:
-                    last_update = time.monotonic()
-                    if gamepad.UP or gamepad.RIGHT:
-                        self.value = self._clamp(self.value + 1)
-                        yield self.value
-                    if gamepad.DOWN or gamepad.LEFT:
-                        self.value = self._clamp(self.value - 1)
-                        yield self.value
-
-                if gamepad.A.pressed:
-                    return
-
-                if gamepad.B.pressed:
-                    yield self.value
-
-            else:
-                key = keyboard.read()
-                if key in (keyboard.UP, keyboard.RIGHT):
-                    self.value = self._clamp(self.value + 1)
-                    yield self.value
-                if key in (keyboard.DOWN, keyboard.LEFT):
-                    self.value = self._clamp(self.value - 1)
-                    yield self.value
-                if key == keyboard.SPACE:
-                    yield self.value
-                if key == keyboard.ENTER:
-                    yield self.value
-                    return
+            key = keyboard.read()
+            if key in (keyboard.UP, keyboard.RIGHT):
+                self.value = self._clamp(self.value + 1)
+                yield self.value
+            if key in (keyboard.DOWN, keyboard.LEFT):
+                self.value = self._clamp(self.value - 1)
+                yield self.value
+            if key == keyboard.SPACE:
+                yield self.value
+            if key == keyboard.ENTER:
+                yield self.value
+                return
