@@ -3,6 +3,7 @@
 # Full text available at: https://opensource.org/licenses/MIT
 
 import colorsys
+import math
 from typing import Callable, Sequence, Union
 
 import pydantic
@@ -10,6 +11,9 @@ import rich.align
 import rich.box
 import rich.table
 import rich.text
+
+from wintertools.units import format_hertz, format_volts
+from wintertools.waveform import Waveform
 
 from .svg import Drawing
 
@@ -83,9 +87,16 @@ class Padding(pydantic.BaseModel):
         return self.x(x), self.y(y), self.width(w), self.height(h)
 
 
+class Outline(pydantic.BaseModel):
+    left: float | None = 5
+    right: float | None = None
+    top: float | None = None
+    bottom: float | None = 5
+
+
 class GridLines(pydantic.BaseModel):
-    x_step: float = None
-    y_step: float = None
+    x_step: float | None = None
+    y_step: float | None = None
 
     def draw(self, dwg, x_axis, y_axis, w, h):
         px = dwg.path(class_="x-axis grid-lines")
@@ -97,25 +108,31 @@ class GridLines(pydantic.BaseModel):
 
         # Vertical lines
         if self.x_step is None:
-            self.x_step = 1 / x_axis.span
+            self.x_step = 0.1
 
-        x = self.x_step
+        print(f"{self.x_step=}")
 
-        while x < 1.0:
+        x_center = x_axis.offset_of(0)
+        x_min_step = -math.floor(x_center / self.x_step)
+        x_max_step = math.ceil((1 - x_center) / self.x_step)
+
+        for step in range(x_min_step, x_max_step):
+            x = x_center + (step * self.x_step)
             px.push("M", x_axis.ease(x) * w, 0)
             px.push("l", 0, h)
-            x += self.x_step
 
         # Horizontal lines
         if self.y_step is None:
-            self.y_step = 1 / y_axis.span
+            self.y_step = 0.1
 
-        y = self.y_step
+        y_center = y_axis.offset_of(0)
+        y_min_step = -math.floor(y_center / self.y_step)
+        y_max_step = math.ceil((1 - y_center) / self.y_step)
 
-        while y <= 1.0:
-            py.push("M", 0, y_axis.ease(y) * h)
+        for step in range(y_min_step, y_max_step):
+            y = y_center + (step * self.y_step)
+            py.push("M", 0, h - y_axis.ease(y) * h)
             py.push("l", w, 0)
-            y += self.y_step
 
         return [px, py]
 
@@ -134,6 +151,25 @@ class LineGraph(pydantic.BaseModel):
     y_axis: Axis = pydantic.Field(default_factory=Axis)
     grid_lines: GridLines = pydantic.Field(default_factory=GridLines)
     center_line: bool = False
+    outline: Outline = pydantic.Field(default_factory=Outline)
+
+    @classmethod
+    def from_waveform(cls, wf: Waveform, *, label=None):
+        if label is None:
+            label = f"{format_volts(wf.voltage_span, precision=1)} @ {format_hertz(wf.frequency, precision=1)}"
+
+        return cls(
+            height=600,
+            x_axis=Axis(
+                min=wf.start_time,
+                max=wf.end_time,
+                label=label,
+            ),
+            y_axis=Axis(min=wf.vertical_min, max=wf.vertical_max),
+            padding=Padding(left=50, right=50, top=10, bottom=100),
+            outline=Outline(top=5, left=5, right=5, bottom=5),
+            center_line=True,
+        )
 
     def draw(self, series: Union[Series, Sequence[Series]]):
         drawing = Drawing(self.width, self.height)
@@ -142,27 +178,23 @@ class LineGraph(pydantic.BaseModel):
         x, y, w, h = self.padding(0, 0, drawing.width, drawing.height)
         h_half = h * 0.5
 
+        clip_path = svg.defs.add(svg.clipPath(id="clipBounds"))
+        clip_path.add(svg.rect(insert=(x, y), size=(w, h)))
+
         g = svg.g()
         g.translate(x, y)
         svg.add(g)
 
-        # left and bottom lines
-        p = svg.path()
-        p.fill(color="none")
-        p.stroke(color="black", width=5)
-        p.push("M", 0, 0)
-        p.push("l", 0, h)
-        p.push("l", w, 0)
-        g.add(p)
-
         # middle line
-        if self.center_line:
+        if self.center_line is not False:
             p = svg.path()
             p.fill(color="none")
-            p.stroke(color="black", width=5)
-            p.dasharray([4])
-            p.push("M", 0, h_half)
-            p.push("L", w, h_half)
+            p.stroke(color="black", width=2)
+            # p.dasharray([4])
+            center_y = self.y_axis.offset_of(0)
+            center_y = h - (center_y * h)
+            p.push("M", 0, center_y)
+            p.push("L", w, center_y)
             g.add(p)
 
         # gridlines
@@ -174,6 +206,11 @@ class LineGraph(pydantic.BaseModel):
             serieses = [series]
         else:
             serieses = series
+
+        # separate (nested) group for series so we can clip it.
+        clip_g = svg.add(svg.g(clip_path="url(#clipBounds)"))
+        g2 = clip_g.add(svg.g())
+        g2.translate(x, y)
 
         # start of data points
         for series in serieses:
@@ -189,11 +226,41 @@ class LineGraph(pydantic.BaseModel):
                 x_offset = x_offset_factor * w
 
                 y_offset_factor = self.y_axis.offset_of(y)
-                x_offset_factor = min(1.0, max(0.0, y_offset_factor))
-                y_offset = h - (x_offset_factor * h)
+                y_offset_factor = min(1.0, max(0.0, y_offset_factor))
+                y_offset = h - (y_offset_factor * h)
 
                 p.push("M" if n == 0 else "L", x_offset, y_offset)
 
+            g2.add(p)
+
+        # outlines
+        if self.outline.left is not None:
+            p = svg.path()
+            p.fill(color="none")
+            p.stroke(color="black", width=self.outline.left)
+            p.push("M", 0, 0)
+            p.push("l", 0, h)
+            g.add(p)
+        if self.outline.bottom is not None:
+            p = svg.path()
+            p.fill(color="none")
+            p.stroke(color="black", width=self.outline.bottom)
+            p.push("M", 0, h)
+            p.push("l", w, 0)
+            g.add(p)
+        if self.outline.right is not None:
+            p = svg.path()
+            p.fill(color="none")
+            p.stroke(color="black", width=self.outline.right)
+            p.push("M", w, 0)
+            p.push("l", 0, h)
+            g.add(p)
+        if self.outline.top is not None:
+            p = svg.path()
+            p.fill(color="none")
+            p.stroke(color="black", width=self.outline.top)
+            p.push("M", 0, 0)
+            p.push("l", w, 0)
             g.add(p)
 
         # Labels
