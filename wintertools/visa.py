@@ -22,6 +22,7 @@ def global_resource_manager():
 
 class Instrument:
     TIMEOUT = 2000
+    CHUNK_SIZE = 20 * 1024 * 1024
 
     def __init__(self, resource_manager=None, resource_name=None):
         self.connect(resource_manager, resource_name)
@@ -44,7 +45,16 @@ class Instrument:
             ) from exc
 
         resource.timeout = self.TIMEOUT
+        resource.chunk_size = self.CHUNK_SIZE
         self.port = resource
+
+    @property
+    def timeout(self):
+        return self.port.timeout
+
+    @timeout.setter
+    def timeout(self, timeout):
+        self.port.timeout = timeout
 
     def close(self):
         self.port.close()
