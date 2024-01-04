@@ -230,7 +230,7 @@ class WaveformPassFail:
         return inst
 
 
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True)
 class WaveformPassFailResult:
     reference_image: Image.Image
     measured_image: Image.Image
@@ -250,6 +250,31 @@ class WaveformPassFailResult:
         draw.bitmap((0, 0), self.outside_image, (255, 100, 100, 255))
 
         return composite
+
+    @functools.cached_property
+    def samples(self):
+        r = np.array(self.outside_image, dtype=np.bool_)
+        # "Flatten" the image into a single row by logically oring every row in
+        # the image.
+        r = np.logical_or.reduce(r)
+
+        return np.logical_not(r)
+
+    @functools.cached_property
+    def pass_count(self):
+        return self.samples.sum()
+
+    @functools.cached_property
+    def fail_count(self):
+        return self.samples.size - self.samples.sum()
+
+    @functools.cached_property
+    def pass_ratio(self):
+        return self.pass_count / self.samples.size
+
+    @functools.cached_property
+    def fail_ratio(self):
+        return self.fail_count / self.samples.size
 
 
 def _resample(src: np.ndarray, num_samples: int):
