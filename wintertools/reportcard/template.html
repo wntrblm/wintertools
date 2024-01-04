@@ -113,6 +113,15 @@
       margin-left: 1rem;
       text-align: right;
       font-weight: normal;
+
+      display: flex;
+      align-content: center;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    section dd .material-icons {
+      margin-left: 0.25rem;
     }
 
     section dl.stack dt {
@@ -196,7 +205,7 @@
     {% elif item.type == "pass_fail" %}
     <dl class="{{item.class_}}">
       <dt>{{item.label}}</dt>
-      <dd>{{material_icon(item.icon)}}</dd>
+      <dd>{{item.details}} {{material_icon(item.icon)}}</dd>
     </dl>
     {% elif item.type in ("image", "line_graph") %}
     <img src="{{item.src}}" class="{{item.class_}}" />

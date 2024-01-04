@@ -21,7 +21,7 @@ import ulid
 
 from . import graph
 
-_MAX_CONSOLE_WIDTH = 60
+_MAX_CONSOLE_WIDTH = 120
 
 
 def _json_encoder(val, default):
@@ -137,6 +137,7 @@ class PassFailItem(Item):
     type: str = "pass_fail"
     label: str
     value: bool
+    details: str = ""
 
     @property
     def icon(self):
@@ -150,7 +151,7 @@ class PassFailItem(Item):
         character = "✓" if self.value else "❌"
         return rich.console.Group(
             rich.text.Text(f"{self.label}: ", style="italic", end=""),
-            rich.text.Text(character, style=style),
+            rich.text.Text(f"{self.details} {character}", style=style),
         )
 
 
