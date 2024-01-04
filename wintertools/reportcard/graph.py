@@ -110,8 +110,6 @@ class GridLines(pydantic.BaseModel):
         if self.x_step is None:
             self.x_step = 0.1
 
-        print(f"{self.x_step=}")
-
         x_center = x_axis.offset_of(0)
         x_min_step = -math.floor(x_center / self.x_step)
         x_max_step = math.ceil((1 - x_center) / self.x_step)
@@ -152,6 +150,7 @@ class LineGraph(pydantic.BaseModel):
     grid_lines: GridLines = pydantic.Field(default_factory=GridLines)
     center_line: bool = False
     outline: Outline = pydantic.Field(default_factory=Outline)
+    show_on_console: bool = False
 
     @classmethod
     def from_waveform(cls, wf: Waveform, *, label=None):
@@ -288,22 +287,25 @@ class LineGraph(pydantic.BaseModel):
         for _ in series:
             table.add_column(self.y_axis.label)
 
-        for n in range(len(series[0].data)):
-            row = [series[0].data[n][0]]
+        if self.show_on_console:
+            for n in range(len(series[0].data)):
+                row = [series[0].data[n][0]]
 
-            for s in series:
-                row.append(s.data[n][1])
+                for s in series:
+                    row.append(s.data[n][1])
 
-            for n, v in enumerate(row):
-                if n == 0:
-                    row[n] = rich.text.Text(f"{v:0.3f}", style="bold italic")
-                elif isinstance(v, float):
-                    color = _color_for_value(v, self.y_axis.min, self.y_axis.max)
-                    row[n] = rich.text.Text(f"{v:0.3f}", style=color)
-                else:
-                    row[n] = f"{v!r}"
+                for n, v in enumerate(row):
+                    if n == 0:
+                        row[n] = rich.text.Text(f"{v:0.3f}", style="bold italic")
+                    elif isinstance(v, float):
+                        color = _color_for_value(v, self.y_axis.min, self.y_axis.max)
+                        row[n] = rich.text.Text(f"{v:0.3f}", style=color)
+                    else:
+                        row[n] = f"{v!r}"
 
-            table.add_row(*row)
+                table.add_row(*row)
+        else:
+            table.add_row("hidden on console")
 
         return rich.align.Align.center(table)
 

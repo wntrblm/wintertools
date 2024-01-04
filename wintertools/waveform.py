@@ -73,7 +73,10 @@ class Waveform:
     def to_list(self, samples=None):
         if samples is not None:
             data = np.column_stack(
-                (_resample(self.data[:, 0], samples), _resample(self.data[:, 1], samples))
+                (
+                    _resample(self.data[:, 0], samples),
+                    _resample(self.data[:, 1], samples),
+                )
             )
         else:
             data = self.data
@@ -183,21 +186,23 @@ class WaveformPassFail:
 
     def __init__(
         self,
-        reference: Waveform,
-        tolerance: float = 0.1,
+        *,
         resolution: tuple[int, int] = (0, 0),
     ):
-        self.reference = reference
-        self.tolerance = tolerance
         self.resolution = resolution
-        self._make_reference_image()
+        self.reference_image = None
 
-    def _make_reference_image(self):
-        self.reference_image = self.reference.to_binary_image(
+    def add_reference(self, reference, *, tolerance=0.1):
+        ref_img = reference.to_binary_image(
             size=self.resolution,
-            thickness=math.ceil(self.reference.num_samples * self.tolerance),
+            thickness=math.ceil(reference.num_samples * tolerance),
         )
-        self.resolution = self.reference_image.size
+
+        if not self.reference_image:
+            self.reference_image = ref_img
+            self.resolution = self.reference_image.size
+        else:
+            self.reference_image = ImageChops.logical_or(self.reference_image, ref_img)
 
     def compare(self, wf: Waveform):
         measured = wf.to_binary_image(
@@ -212,6 +217,17 @@ class WaveformPassFail:
             measured_image=measured,
             outside_image=outside,
         )
+
+    def save_as_image(self, dst):
+        self.reference_image.save(dst)
+
+    @classmethod
+    def load_from_image(cls, src):
+        inst = WaveformPassFail()
+        img = Image.open(src).convert("1")
+        inst.resolution = img.size
+        inst.reference_image = img
+        return inst
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
