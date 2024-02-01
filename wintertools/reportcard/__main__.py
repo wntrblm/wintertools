@@ -14,12 +14,26 @@ from wintertools import thermalprinter
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("source", type=pathlib.Path)
+    parser.add_argument("--source", type=pathlib.Path, default="latest")
     parser.add_argument("--html", type=pathlib.Path)
     parser.add_argument("--image", type=pathlib.Path)
     parser.add_argument("--print", action="store_true")
 
     args = parser.parse_args()
+
+    if str(args.source) == "latest":
+        print("Reprinting last report")
+        reports = pathlib.Path("./reports").glob("*.json")
+        latest = None
+        latest_mtime = 0
+        for report in reports:
+            mtime = report.stat().st_mtime
+            if mtime > latest_mtime:
+                latest_mtime = mtime
+                latest = report
+
+        args.source = latest
+        args.print = True
 
     with args.source.open("rb") as fh:
         report = Report.load(fh)
