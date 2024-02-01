@@ -18,10 +18,33 @@ import rich.padding
 import rich.panel
 import rich.text
 import ulid
+import numpy as np
 
+from wintertools.waveform import Waveform
 from . import graph
 
 _MAX_CONSOLE_WIDTH = 120
+BLACKISH = "#231F20"
+TEALS = (
+    "#99D1D6",
+    "#66ADB5",
+    "#408C94",
+    "#267880",
+)
+REDS = (
+    "#F597A3",
+    "#F2727F",
+    "#DB475B",
+    "#C02435",
+)
+PURPLES = (
+    "#C7B8ED",
+    "#A38AD6",
+    "#7D61BA",
+    "#5E409E",
+)
+COLORS = np.array([TEALS, REDS, PURPLES]).T.flatten()
+DEFAULT_STROKES = (BLACKISH, TEALS[-1], REDS[-1], PURPLES[-1])
 
 
 def _json_encoder(val, default):
@@ -100,6 +123,10 @@ class Item(_BaseModel):
     type: str = "unknown"
     class_: str = ""
 
+    @property
+    def succeeded(self):
+        return True
+
     def __rich__(self):
         return rich.text.Text(f"<no renderer for {self.type}>", style="yellow italic")
 
@@ -140,6 +167,10 @@ class PassFailItem(Item):
     details: str = ""
 
     @property
+    def succeeded(self):
+        return self.value
+
+    @property
     def icon(self):
         if self.value:
             return "check_circle"
@@ -165,6 +196,34 @@ class LineGraphItem(Item):
     series: Union[graph.Series, Sequence[graph.Series]]
     graph: graph.LineGraph
 
+    @classmethod
+    def from_waveform(
+        cls,
+        wf: Waveform | list[Waveform],
+        *,
+        label=None,
+        points=200,
+        stroke: str | list[str] | None = None,
+        stroke_width=6,
+    ):
+        if stroke is None:
+            stroke = DEFAULT_STROKES
+
+        wfs = [wf] if isinstance(wf, Waveform) else wf
+        strokes = [stroke] if isinstance(stroke, str) else stroke
+
+        return LineGraphItem(
+            series=[
+                graph.Series(
+                    data=wf.to_list(points),
+                    stroke=strokes[n % len(strokes)],
+                    stroke_width=stroke_width,
+                )
+                for n, wf in enumerate(wfs)
+            ],
+            graph=graph.LineGraph.from_waveform(wfs[0], label=label),
+        )
+
     @property
     def src(self):
         return self.graph.draw(series=self.series)
@@ -176,6 +235,20 @@ class LineGraphItem(Item):
 class Section(_BaseModel):
     name: str
     items: list[Item] = []
+
+    def append(self, item):
+        self.items.append(item)
+        return item
+
+    def extend(self, seq):
+        self.items.extend(seq)
+
+    @property
+    def succeeded(self):
+        for i in self.items:
+            if not i.succeeded:
+                return False
+        return True
 
     def __rich__(self):
         return rich.console.Group(
@@ -193,13 +266,23 @@ class Report(_BaseModel):
     date: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
     sections: list[Section] = []
 
+    def append(self, item):
+        self.sections.append(item)
+
+    def extend(self, seq):
+        self.sections.extend(seq)
+
+    def __getitem__(self, index: str) -> Section | None:
+        for s in self.sections:
+            if s.name == index:
+                return s
+        return None
+
     @property
     def succeeded(self):
         for s in self.sections:
-            for i in s.items:
-                if isinstance(i, PassFailItem):
-                    if not i.value:
-                        return False
+            if not s.succeeded:
+                return False
         return True
 
     def save(self, file=None):
