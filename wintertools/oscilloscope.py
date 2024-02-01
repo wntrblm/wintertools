@@ -60,6 +60,12 @@ class Oscilloscope(visa.Instrument):
     def set_vertical_offset(self, channel: str, volts: str):
         self.write(f"{channel}:ofst {volts}")
 
+    def set_ac_coupling(self, channel: str, impedance="1M"):
+        self.write(f"{channel}:coupling A{impedance}")
+
+    def set_dc_coupling(self, channel: str, impedance="1M"):
+        self.write(f"{channel}:coupling D{impedance}")
+
     def get_time_division(self):
         return float(self.query("tdiv?"))
 
@@ -110,6 +116,9 @@ class Oscilloscope(visa.Instrument):
 
     def get_peak_to_peak(self, trace: str):
         return self.get_parameter_value(trace, "PKPK")
+
+    def get_mean(self, trace: str):
+        return self.get_parameter_value(trace, "MEAN")
 
     def get_max(self, trace: str):
         return self.get_parameter_value(trace, "MAX")
